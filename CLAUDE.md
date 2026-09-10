@@ -7,8 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Noisefield is a native Linux desktop app (C++20 + JUCE 8) that generates a tone and coloured
 noise, mixes them, and sends the result to an audio output — plus a VST3/LV2/CLAP plugin
 from the same engine. It is a personal tinnitus-relief tool. State: **M2** done, **M3** in
-progress (noise colours, presets, JSON model done; layer rework pending), with some M4 items
-(oscilloscope, dBFS meter, packaging) already in. The roadmap, milestones (M1–M4) and the
+progress (noise colours, presets, JSON model, engine layer pool done; the layer-list GUI is
+next), with some M4 items (oscilloscope, dBFS meter, packaging) already in. The roadmap,
+milestones (M1–M4) and the
 bug list are in `docs/backlog.md`; the design rationale is in `docs/plan.md`.
 
 ## Commands
@@ -94,20 +95,29 @@ their headers don't pollute our warning output. Versions are pinned in
 
 ## Audio architecture
 
-`engine::SignalGraph` is the whole real-time signal path and owns the parameter block. Per
-sample: `SineOscillator` + tinted `WhiteNoise` (`dsp::NoiseTint`) → smoothed per-source gains
-→ sum → smoothed master gain → `SoftLimiter` → every output channel; then lock-free taps for
-the meter and the oscilloscope (`dsp::ScopeBuffer`). It is host-agnostic — the standalone
-`engine::AudioEngine` feeds it from an `AudioIODeviceCallback`; the plugin feeds it from
-`processBlock`.
+`engine::SignalGraph` is the whole real-time signal path and owns the parameter block. It
+renders a **fixed pool of `kMaxLayers` layer voices** (`EngineParameters.h`); each voice is a
+`SineOscillator` **or** a tinted `WhiteNoise` (`dsp::NoiseTint`) with its own smoothed gain.
+Per sample: sum the active voices → smoothed master gain → `SoftLimiter` → every output
+channel; then lock-free taps for the meter and the oscilloscope (`dsp::ScopeBuffer`). It is
+host-agnostic — the standalone `engine::AudioEngine` feeds it from an `AudioIODeviceCallback`;
+the plugin feeds it from `processBlock`.
 
-- **controls → audio** go through `engine::EngineParameters` — a struct of `std::atomic` read
-  with `std::memory_order_relaxed` in `process()`. The standalone GUI writes it directly; the
+- **Layers.** Each slot has a `LayerParameters` block (`active`, `source`, `muted`, `gainDb`,
+  `frequencyHz`, `noiseColour`, `seed`, `epoch`). The GUI adds/removes a layer by toggling
+  `active` — the per-slot `dsp::ParamSmoother` crossfades it in/out and a fully faded, inactive
+  slot is skipped (no CPU). Re-using a slot for a *different* layer is an `epoch` bump, which
+  hard-resets that voice with its gain forced to 0. The mix is a plain sum, so slot order does
+  not matter; layer identity is the slot index and display order is the GUI's concern.
+  **The main window and the plugin currently drive just two fixed slots** (0 = tone, 1 = noise)
+  through their existing Tone/Noise controls; the dynamic layer-list GUI is NF-042.
+- **controls → audio** go through `engine::EngineParameters` — nested `std::atomic`s read with
+  `std::memory_order_relaxed` in `process()`. The standalone GUI writes it directly; the
   plugin mirrors its APVTS into it once per block. No other channel; no locks.
 - **audio → GUI**: the meter is an `std::atomic<float>` peak-hold updated with
   `compare_exchange`; the scope is a lock-free SPSC ring. Both read on a 30 Hz GUI timer.
-- Every audible parameter is ramped: gains via `dsp::ParamSmoother`, frequency inside
-  `SineOscillator`. The scratch buffer is sized once in `prepare()`.
+- Every audible parameter is ramped: per-layer and master gains via `dsp::ParamSmoother`,
+  frequency inside `SineOscillator`. The scratch buffer is sized once in `prepare()`.
 - `SignalGraph::process()` must stay allocation-free, lock-free, I/O-free, exception-free. The
   rules and the patterns are in `docs/realtime-rules.md` — read it before touching it.
 

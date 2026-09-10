@@ -69,7 +69,13 @@ filter each layer by band, mix with pan/mute/solo, and save/load the project and
   nested structures). `test_preset_json.cpp` (round trip, defaults, malformed, schema bump).
   The `Project` / `Layer` structs (with layers array, session settings) wait for the M3
   engine rework (NF-041); `Preset` covers today's flat single-tone + single-noise state.
-- [ ] **NF-041** (M) Layer management in the engine: add/remove/reorder without glitches (crossfade).
+- [x] **NF-041** (M) Layer management in the engine: `engine::SignalGraph` renders a fixed
+  pool of `kMaxLayers` layer voices (oscillator / tinted noise, per-slot smoothed gain).
+  Add/remove is an `active` toggle with a per-slot gain crossfade; idle slots are skipped;
+  slot reuse is an `epoch` bump that hard-resets the voice. Reorder is free — the mix is a
+  sum. The app + plugin still drive two fixed slots (tone, noise) pending NF-042.
+  `test_signal_graph.cpp` covers sum / fade-out / fade-in / crossfade / slot reuse / mute /
+  full pool.
 - [ ] **NF-042** (M) Layer-list GUI: create, delete, reorder, select; per-layer parameter editing.
 - [x] **NF-043** (M) Pink noise (Kellett filter) — `dsp::NoiseTint`, RMS-matched, spectral-tilt test.
 - [x] **NF-044** (S) Brown noise (leaky integrator) — `dsp::NoiseTint` + test.
@@ -97,7 +103,7 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
   window (Scope button; window grows/shrinks to fit; state persists). Engine feeds it via
   `dsp::ScopeBuffer` (lock-free SPSC ring); `test_scope_buffer.cpp`.
 - [~] **NF-062** (S) Master meter: dBFS scale ticks, peak hold, clip latch, peak-dBFS readout
-  in the status line. Per-layer meters wait for the M3 layer rework (NF-041/048).
+  in the status line. Per-layer meters wait for the mixer GUI (NF-048).
 - [ ] **NF-063** (M) WAV/FLAC recorder of the master bus (streaming to disk from a separate thread).
 - [ ] **NF-064** (M) Fixed-duration offline export, faster than real time, with TPDF dither.
 - [ ] **NF-065** (M) Session timer: duration, fade-in/out, automatic stop.
