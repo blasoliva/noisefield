@@ -80,6 +80,7 @@ target_sources(Noisefield PRIVATE
     ${NOISEFIELD_APP_SOURCES}
     app/MainComponent.h
     app/NoisefieldLookAndFeel.h
+    app/Presets.h
     engine/AudioEngine.h
     engine/EngineParameters.h
     gui/DetachedWindow.h

@@ -15,6 +15,20 @@ next time.
 
 ## Main window
 
+### Preset
+
+A starting point that sets every control at once. Pick one, then adjust to taste — the
+preset is not "locked", it just moves the controls. Options:
+
+- **Tinnitus mask** / **Tinnitus mask + tone** — pink noise, with a 4 kHz tone in the second
+  one that you can drag to your own tinnitus pitch.
+- **Focus** — steady pink noise, no tone.
+- **Sleep** — brown noise with a soft 60 Hz hum, quieter master.
+- **Deep rain** — brown noise.
+- **White wash** — plain white noise.
+- **Test tone 1 kHz** — a 1 kHz tone, no noise.
+- **Silence** — everything down.
+
 ### Transport
 
 - **Play / Stop** — starts and stops audio processing.

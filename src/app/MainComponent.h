@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/Presets.h"
 #include "engine/AudioEngine.h"
 #include "gui/LevelMeter.h"
 #include "gui/Oscilloscope.h"
@@ -30,6 +31,7 @@ private:
     void loadSettings();
     void saveSettings();
     void pushAllParametersToEngine();
+    void applyPreset(const Preset& preset);
     void openSettingsWindow();
     void openGuideWindow();
     void setScopeExpanded(bool expanded);
@@ -49,6 +51,9 @@ private:
     juce::TextButton settingsButton_{"Settings"};
     gui::Oscilloscope oscilloscope_;
     gui::LevelMeter meter_;
+
+    juce::Label presetLabel_;
+    juce::ComboBox presetBox_;
 
     juce::Label toneHeading_;
     juce::ToggleButton toneEnableButton_{"Enabled"};

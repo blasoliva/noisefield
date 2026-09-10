@@ -25,7 +25,7 @@ constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
 constexpr auto kAudioStateKey = "audioDeviceState";
 
-constexpr int kBaseHeight = 470;       // window height with the scope collapsed
+constexpr int kBaseHeight = 512;       // window height with the scope collapsed
 constexpr int kScopeBlockHeight = 116; // extra height when the scope is expanded (100 + gap)
 
 void styleHeading(juce::Label& label, const juce::String& text)
@@ -83,6 +83,18 @@ MainComponent::MainComponent()
     settingsButton_.onClick = [this]
     {
         openSettingsWindow();
+    };
+
+    presetLabel_.setText("Preset", juce::dontSendNotification);
+    presetLabel_.setColour(juce::Label::textColourId, juce::Colour(0xffb9c0c8));
+    presetBox_.setTextWhenNothingSelected("Choose a preset");
+    for (size_t i = 0; i < kPresets.size(); ++i)
+        presetBox_.addItem(kPresets[i].name, static_cast<int>(i) + 1);
+    presetBox_.onChange = [this]
+    {
+        const int index = presetBox_.getSelectedId() - 1;
+        if (index >= 0 && index < static_cast<int>(kPresets.size()))
+            applyPreset(kPresets[static_cast<size_t>(index)]);
     };
 
     styleHeading(toneHeading_, "Tone");
@@ -156,25 +168,14 @@ MainComponent::MainComponent()
     if (const auto error = engine_.initialise(audioState.get()); error.isNotEmpty())
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
-    for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
-                                                                      &masterMuteButton_,
-                                                                      &scopeButton_,
-                                                                      &guideButton_,
-                                                                      &settingsButton_,
-                                                                      &oscilloscope_,
-                                                                      &meter_,
-                                                                      &toneHeading_,
-                                                                      &toneEnableButton_,
-                                                                      &frequencySlider_,
-                                                                      &toneGainSlider_,
-                                                                      &noiseHeading_,
-                                                                      &noiseEnableButton_,
-                                                                      &noiseColourBox_,
-                                                                      &noiseGainSlider_,
-                                                                      &reseedButton_,
-                                                                      &masterHeading_,
-                                                                      &masterGainSlider_,
-                                                                      &statusLabel_})
+    for (juce::Component* c : std::initializer_list<juce::Component*>{
+             &playButton_,     &masterMuteButton_, &scopeButton_,
+             &guideButton_,    &settingsButton_,   &oscilloscope_,
+             &meter_,          &presetLabel_,      &presetBox_,
+             &toneHeading_,    &toneEnableButton_, &frequencySlider_,
+             &toneGainSlider_, &noiseHeading_,     &noiseEnableButton_,
+             &noiseColourBox_, &noiseGainSlider_,  &reseedButton_,
+             &masterHeading_,  &masterGainSlider_, &statusLabel_})
         addAndMakeVisible(c);
 
     oscilloscope_.setVisible(scopeExpanded_);
@@ -278,6 +279,18 @@ void MainComponent::saveSettings()
     store->saveIfNeeded();
 }
 
+void MainComponent::applyPreset(const Preset& preset)
+{
+    toneEnableButton_.setToggleState(preset.toneEnabled, juce::sendNotification);
+    frequencySlider_.setValue(preset.toneFrequencyHz, juce::sendNotification);
+    toneGainSlider_.setValue(preset.toneGainDb, juce::sendNotification);
+    noiseEnableButton_.setToggleState(preset.noiseEnabled, juce::sendNotification);
+    noiseColourBox_.setSelectedId(preset.noiseColour + 1, juce::sendNotification);
+    noiseGainSlider_.setValue(preset.noiseGainDb, juce::sendNotification);
+    masterGainSlider_.setValue(preset.masterGainDb, juce::sendNotification);
+    params().limiterEnabled.store(preset.limiterEnabled, std::memory_order_relaxed);
+}
+
 void MainComponent::pushAllParametersToEngine()
 {
     auto& p = params();
@@ -335,6 +348,13 @@ void MainComponent::resized()
         area.removeFromTop(16);
     }
     meter_.setBounds(area.removeFromTop(16));
+    area.removeFromTop(16);
+
+    {
+        auto row = area.removeFromTop(26);
+        presetLabel_.setBounds(row.removeFromLeft(52));
+        presetBox_.setBounds(row);
+    }
     area.removeFromTop(16);
 
     toneHeading_.setBounds(area.removeFromTop(20));

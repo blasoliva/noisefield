@@ -113,7 +113,10 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 
 - [ ] **NF-090** Plugin version LV2 / CLAP / VST3 from the same engine.
 - [ ] **NF-091** MIDI input: play the oscillator, map CC to parameters.
-- [ ] **NF-092** Use-case presets: tinnitus, focus, sleep.
+- [x] **NF-092** Use-case presets: 8 built-in presets (tinnitus mask ±tone, focus, sleep,
+  deep rain, white wash, 1 kHz test tone, silence) selectable from a **Preset** combo that
+  sets every control at once (`src/app/Presets.h`). Not persisted itself — the resulting
+  control values are. File-based user presets remain M3's NF-051.
 - [ ] **NF-093** Timeline automation.
 - [ ] **NF-094** Internationalization ES/EN.
 - [ ] **NF-095** EQ profiles / filter-response import.
