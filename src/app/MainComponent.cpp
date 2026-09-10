@@ -28,6 +28,13 @@ constexpr auto kAudioStateKey = "audioDeviceState";
 constexpr int kBaseHeight = 512;       // window height with the scope collapsed
 constexpr int kScopeBlockHeight = 116; // extra height when the scope is expanded (100 + gap)
 
+// juce::String(const char*) decodes bytes as ASCII and mangles anything non-ASCII, so route
+// user-facing literals that contain non-ASCII characters (e.g. an em dash) through this.
+juce::String uiString(const char* utf8)
+{
+    return juce::String::fromUTF8(utf8);
+}
+
 void styleHeading(juce::Label& label, const juce::String& text)
 {
     label.setText(text, juce::dontSendNotification);
@@ -215,7 +222,7 @@ void MainComponent::openSettingsWindow()
         return;
     }
     settingsWindow_ =
-        std::make_unique<gui::DetachedWindow>("Noisefield — Settings",
+        std::make_unique<gui::DetachedWindow>(uiString("Noisefield — Settings"),
                                               std::make_unique<gui::SettingsComponent>(engine_),
                                               [this] { settingsWindow_.reset(); });
 }
@@ -227,8 +234,9 @@ void MainComponent::openGuideWindow()
         guideWindow_->toFront(true);
         return;
     }
-    guideWindow_ = std::make_unique<gui::DetachedWindow>(
-        "Noisefield — Guide", std::make_unique<gui::GuideView>(), [this] { guideWindow_.reset(); });
+    guideWindow_ = std::make_unique<gui::DetachedWindow>(uiString("Noisefield — Guide"),
+                                                         std::make_unique<gui::GuideView>(),
+                                                         [this] { guideWindow_.reset(); });
 }
 
 void MainComponent::loadSettings()

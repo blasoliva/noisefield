@@ -130,22 +130,18 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 
 ## Bugs to resolve
 
-- [ ] **BUG-001** — Encoding artefacts in the Guide (and Settings) window title bar. The
-  titles read `Noisefield â Guide` instead of `Noisefield — Guide`.
-  - **Cause (verified):** the window names are passed as plain `const char*` string
-    literals containing a UTF-8 em dash (`—`). `juce::String(const char*)` decodes them as
-    `CharPointer_ASCII`, so the multi-byte character is mangled. Confirmed via `xprop`
-    (`WM_NAME` = `"Noisefield â\302\200\302\224 Guide"`) and in the JUCE source
-    (`juce_String.cpp`, the `CharPointer_ASCII` constructor with its explanatory assertion).
-  - **Where:** any `const char*` UI literal with a non-ASCII char —
-    `src/app/MainComponent.cpp` (`"Noisefield — Guide"`, `"Noisefield — Settings"`,
-    `"Noisefield — Scope"`). New UI strings currently sidestep it by staying ASCII
-    (e.g. `"Oscilloscope (master output)"`).
-  - **Fix direction (not applied):** a small `nf::utf8("...")` helper wrapping
-    `juce::String::fromUTF8`, used for every user-facing literal; or wrap non-ASCII literals
-    in `juce::CharPointer_UTF8(...)`.
-  - The Guide *content* is not affected — it is loaded with `String::fromUTF8` and renders
-    the em dash correctly.
+- [x] **BUG-001** — Encoding artefacts in the Guide / Settings window titles
+  (they read `Noisefield â Guide` instead of `Noisefield — Guide`).
+  - **Cause:** the titles were `const char*` literals with a UTF-8 em dash;
+    `juce::String(const char*)` decodes as `CharPointer_ASCII` and mangled it. A second,
+    milder failure surfaced under headless test — Xlib's
+    `Xutf8TextListToTextProperty` needs a UTF-8 locale to write the title property.
+  - **Fix** (`src/app/MainComponent.cpp`, `src/app/Main.cpp`): a local `uiString()`
+    helper wrapping `juce::String::fromUTF8` for the two titles, plus
+    `std::setlocale(LC_ALL, "")` at startup. Verified via `xprop`: `WM_NAME` now
+    carries `... 20 e2 80 94 20 ...` (a real U+2014).
+  - Convention: user-facing literals with non-ASCII characters go through
+    `juce::String::fromUTF8` (or `uiString`).
 
 ---
 

@@ -129,9 +129,10 @@ Control values and the audio-device state persist via `juce::PropertiesFile`
 
 ## Known issues / constraints
 
-- **BUG-001** (`docs/backlog.md`): the Guide and Settings window titles show mojibake because
-  they are `const char*` literals with a UTF-8 em dash passed to `juce::String`, which decodes
-  `const char*` as ASCII. Keep user-facing literals ASCII, or use `String::fromUTF8(...)`.
+- User-facing string literals with non-ASCII characters must go through
+  `juce::String::fromUTF8(...)` — `juce::String(const char*)` decodes as ASCII and mangles
+  them (this was BUG-001, now fixed; `src/app/Main.cpp` also calls `std::setlocale(LC_ALL, "")`
+  so Xlib's title/IME i18n works).
 - The project is GPL-3.0-or-later, kept compatible with JUCE 8's open-source terms. A closed
   distribution or a store with extra restrictions would need a commercial JUCE license and a
   relicensing decision first.

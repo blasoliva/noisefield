@@ -3,6 +3,8 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
+#include <clocale>
+
 namespace noisefield::app
 {
 
@@ -26,6 +28,9 @@ public:
 
     void initialise(const juce::String&) override
     {
+        // Adopt the user's locale so Xlib's i18n text conversion (window titles, IME) works.
+        std::setlocale(LC_ALL, "");
+
         juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel_);
         mainWindow_ = std::make_unique<MainWindow>(getApplicationName());
     }
