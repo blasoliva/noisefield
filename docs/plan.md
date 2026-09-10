@@ -141,6 +141,8 @@ frequency, add white noise, adjust the mix of the two, and hear the result with 
 
 ## 5. Possible features (prioritized roadmap)
 
+This is the envisioned feature set, not a status tracker — see `backlog.md` for what is done.
+
 **"Field" core (high priority):**
 
 - Full noise types: white, pink, brown, blue, violet, grey (psychoacoustically weighted).
@@ -173,9 +175,7 @@ frequency, add white noise, adjust the mix of the two, and hear the result with 
 
 **Long term / icebox:**
 
-- Plugin version LV2 / CLAP / VST3 from the same code.
 - MIDI input (play the oscillator from a keyboard, map CC to parameters).
-- Use-case presets: tinnitus masking, focus, sleep.
 - Timeline automation.
 - Internationalization (ES/EN).
 
