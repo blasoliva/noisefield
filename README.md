@@ -1,7 +1,8 @@
 # Noisefield
 
 A native Linux desktop app to generate tones across a frequency range and mix different
-types of noise (white, pink, brown, blue, violet, grey) into layered sound fields.
+types of noise (white, pink, brown, blue, violet, grey) into layered sound fields. The
+[user guide](docs/guide.md) explains what each control does.
 
 I have tinnitus. Playing certain tones and noise blends through this app relieves the
 sensation for me at times — that is why it exists. This app is a personal tool, not a
@@ -20,13 +21,11 @@ Noisefield is built 100% AI-assisted.
 </p>
 
 <p align="center">
-  <img src="docs/images/settings.png" alt="Settings window: soft limiter and audio device" width="380">
-  &nbsp;
-  <img src="docs/images/guide.png" alt="Built-in guide window" width="380">
+  <img src="docs/images/settings.png" alt="Settings window: soft limiter and audio device" width="420">
 </p>
 
 The soft limiter and audio-device settings live in a separate **Settings** window; a built-in
-**Guide** window explains every control.
+**Guide** window (`docs/guide.md`) explains every control.
 
 ## Tech stack
 
