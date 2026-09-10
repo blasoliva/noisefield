@@ -109,47 +109,6 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 
 ---
 
-## Unscheduled tasks (not assigned to a milestone yet)
-
-Work that should happen but is not yet slotted into M1–M4. Pull items from here into a
-milestone (or a new one) when they become relevant.
-
-### Shared mobile groundwork
-
-- [ ] **NF-100** (M) **Touch/responsive UI layer** shared by desktop and both mobile builds:
-  larger hit targets, layouts that reflow to phone width, gestures instead of hover, on-screen
-  value entry. Prerequisite for NF-110 and NF-120.
-- [ ] **NF-101** (S) **Cross-device settings/preset format** so a session saved on desktop
-  opens on mobile and vice-versa (depends on the M3 JSON project format, NF-040).
-
-### Android version
-
-- [ ] **NF-110** (L) **Android app.** Parent item — ship Noisefield as an Android app.
-  Distribution as a direct APK or via F-Droid keeps the current GPL licensing; Play Store is
-  also possible. Sub-tasks:
-  - [ ] **NF-111** (M) JUCE Android target: Gradle / Android Studio export, NDK build, CI job.
-  - [ ] **NF-112** (M) Audio via Oboe: device open, sample-rate/buffer negotiation, audio
-    focus and lifecycle (pause on background / interruption).
-  - [ ] **NF-113** (M) Android UI pass on top of NF-100: phone and tablet layouts, system
-    back handling, runtime notification/foreground-service for keeping audio alive.
-  - [ ] **NF-114** (S) Packaging: signed APK / AAB, app icon and store listing, install docs.
-
-### iPhone / iOS version
-
-- [ ] **NF-120** (L) **iOS app.** Parent item — ship Noisefield as an iPhone app.
-  **Blocker:** the Apple App Store terms are incompatible with (A)GPL, so an App Store build
-  needs a commercial JUCE license and a project licensing decision. TestFlight / ad-hoc
-  builds are fine under the current license. Sub-tasks:
-  - [ ] **NF-121** (M) JUCE iOS target: Xcode export, signing profiles, CI job.
-  - [ ] **NF-122** (M) Audio via `AVAudioSession` + Core Audio: category/route handling,
-    background-audio capability, interruption and route-change handling.
-  - [ ] **NF-123** (M) iOS UI pass on top of NF-100: iPhone layouts, safe-area insets,
-    Dynamic Type, VoiceOver labels.
-  - [ ] **NF-124** (S) Packaging: App Store / TestFlight build, icon set, privacy manifest,
-    store listing.
-
----
-
 ## Icebox (post-M4, no milestone)
 
 - [ ] **NF-090** Plugin version LV2 / CLAP / VST3 from the same engine.
@@ -191,5 +150,3 @@ milestone (or a new one) when they become relevant.
 - **NF-047** depends on NF-041 (layers in the engine).
 - **NF-060 / NF-061 / NF-062** depend on NF-028 (analysis FIFO infrastructure).
 - **NF-064** depends on NF-063.
-- **NF-113 / NF-123** (mobile UI) depend on **NF-100** (touch/responsive UI layer); **NF-101** depends on NF-040.
-- **NF-111 → NF-112 → NF-113 → NF-114** (Android) and **NF-121 → NF-122 → NF-123 → NF-124** (iOS) run in order within each platform; the two platforms are independent.

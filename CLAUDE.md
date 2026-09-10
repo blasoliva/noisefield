@@ -112,8 +112,7 @@ Control values and the audio-device state persist via `juce::PropertiesFile`
 
 - **BUG-001** (`docs/backlog.md`): the Guide and Settings window titles show mojibake because
   they are `const char*` literals with a UTF-8 em dash passed to `juce::String`, which decodes
-  `const char*` as ASCII. Fix with `juce::CharPointer_UTF8(...)` / `String::fromUTF8(...)` or
-  an ASCII `-`.
-- iOS App Store distribution is incompatible with JUCE's (A)GPL license — an App Store build
-  would need a commercial JUCE license and a project licensing decision (see the mobile tasks
-  in `docs/backlog.md`).
+  `const char*` as ASCII. Keep user-facing literals ASCII, or use `String::fromUTF8(...)`.
+- The project is GPL-3.0-or-later, kept compatible with JUCE 8's open-source terms. A closed
+  distribution or a store with extra restrictions would need a commercial JUCE license and a
+  relicensing decision first.
