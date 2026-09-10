@@ -113,16 +113,24 @@ Principles:
 
 ### 3.1 Data model
 
-- **Project** = ordered list of **Layers** + master bus settings + session settings
-  (timer, fades).
-- **Layer:**
-  - `type`: `oscillator` | `noise`
-  - Oscillator: `shape` (sine/triangle/square/saw), `frequency`, `finetune`, `phase`
-  - Noise: `color` (white/pink/brown/blue/violet/grey), `seed`
-  - Band filter: `mode` (lowpass/highpass/bandpass/notch/off), `cutoff frequency`, `Q`
-  - Mix: `gain`, `pan`, `mute`, `solo`
-  - Modulation: assignments {source → destination, amount}
-- Serialization: JSON (`juce::var` or `nlohmann::json`), with a schema version number.
+**Today** (`src/model/`): `model::Preset` is the full flat sound state — tone
+(enabled/frequency/gain), noise (enabled/colour/gain/seed), master (gain/mute/limiter) —
+with `kSchemaVersion`. `model::toJson` / `model::fromJson` (`PresetJson.cpp`, hand-rolled,
+JUCE-free) read and write it as a small flat JSON object; `fromJson` tolerates unknown keys
+and nested structures so a v1 build can open a future v2 file. Preset files are `.nfp`
+(that JSON) under `~/.config/Noisefield/presets/`, managed by `io::PresetStore`.
+
+**Future (with the M3 engine rework, NF-041):** promote to a **Project** — an ordered list
+of **Layers** + master bus + session settings (timer, fades). A Layer:
+
+- `type`: `oscillator` | `noise`
+- Oscillator: `shape` (sine/triangle/square/saw), `frequency`, `finetune`, `phase`
+- Noise: `color` (white/pink/brown/blue/violet/grey), `seed`
+- Band filter: `mode` (lowpass/highpass/bandpass/notch/off), `cutoff frequency`, `Q`
+- Mix: `gain`, `pan`, `mute`, `solo`
+- Modulation: assignments {source → destination, amount}
+
+Schema version bumps to 2; `fromJson` migrates.
 
 ## 4. Core functionality (MVP)
 
@@ -249,20 +257,21 @@ cmake --build build --target calibrate_noise
 
 ```
 noisefield/
-├─ CMakeLists.txt
-├─ cmake/               # helpers, JUCE FetchContent
+├─ CMakeLists.txt         # + CPack (.deb / .rpm)
+├─ cmake/                 # FetchJUCE / FetchCatch2 / FetchClapExtensions
 ├─ src/
-│  ├─ app/              # Main, MainComponent, window
-│  ├─ engine/           # AudioEngine, graph, mixer, master bus
-│  ├─ dsp/              # oscillators, noise generators, filters, modulators
-│  ├─ model/            # Project, Layer, JSON serialization
-│  ├─ gui/              # components: LayerList, Mixer, Analyzer, Transport
-│  └─ io/               # recorder, exporter, headless CLI
-├─ tests/               # Catch2: dsp, model, offline render
-├─ resources/           # icons, factory presets, fonts
-├─ packaging/           # AppImage, Flatpak manifest, .desktop
-├─ docs/               # plan.md, backlog.md, building.md, guide.md, realtime-rules.md
-└─ .github/workflows/
+│  ├─ app/                # Main, MainComponent, Presets (factory)
+│  ├─ engine/             # SignalGraph (shared RT path) + AudioEngine (device wrapper)
+│  ├─ dsp/                # oscillator, noise + NoiseTint, limiter, smoother, ScopeBuffer
+│  ├─ model/              # Preset + PresetJson (schema-versioned .nfp); Project/Layer later
+│  ├─ gui/                # LevelMeter, Oscilloscope, SettingsComponent, GuideView, DetachedWindow
+│  ├─ io/                 # PresetStore (recorder / exporter / headless CLI later)
+│  └─ plugin/             # NoisefieldAudioProcessor (VST3 / LV2 / CLAP)
+├─ tests/                 # Catch2: dsp, engine (SignalGraph), model (preset JSON)
+├─ tools/                 # calibrate_noise
+├─ resources/             # icon, .desktop
+├─ docs/                  # plan.md, backlog.md, building.md, guide.md, realtime-rules.md, images/
+└─ .github/workflows/     # ci.yml, release.yml
 ```
 
 ## 10. Risks and mitigations

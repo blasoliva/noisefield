@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Noisefield is a native Linux desktop app (C++20 + JUCE 8) that generates a tone and white
-noise, mixes them, and sends the result to an audio output. It is a personal tinnitus-relief
-tool. Current state: milestone **M2** (audible MVP). The roadmap, milestones (M1–M4), the
-unscheduled/mobile work and the bug list all live in `docs/backlog.md`; the design rationale
-is in `docs/plan.md`.
+Noisefield is a native Linux desktop app (C++20 + JUCE 8) that generates a tone and coloured
+noise, mixes them, and sends the result to an audio output — plus a VST3/LV2/CLAP plugin
+from the same engine. It is a personal tinnitus-relief tool. State: **M2** done, **M3** in
+progress (noise colours, presets, JSON model done; layer rework pending), with some M4 items
+(oscilloscope, dBFS meter, packaging) already in. The roadmap, milestones (M1–M4) and the
+bug list are in `docs/backlog.md`; the design rationale is in `docs/plan.md`.
 
 ## Commands
 
@@ -63,10 +64,11 @@ Dependencies and per-distro package lists: `docs/building.md`.
 The CMake target layout keeps the JUCE modules compiled **once per final artefact** and never
 inside a shared library (that would cause duplicate-symbol link errors):
 
-- **`noisefield_dsp`** (INTERFACE, `src/dsp/` + `src/model/`) — header-only, **no JUCE**.
-  Pure `std` so it is fast to unit-test. This is what `tests/` builds against.
-- **`noisefield_core`** (STATIC, `src/core/`) — tiny compiled bits with no JUCE dependency
-  (build-info string from the generated `noisefield/Config.h`). Links `noisefield_dsp`.
+- **`noisefield_dsp`** (INTERFACE, `src/dsp/` + `src/model/` headers) — header-only, **no
+  JUCE**. Pure `std` so it is fast to unit-test. This is what `tests/` builds against.
+- **`noisefield_core`** (STATIC, `src/core/` + `src/model/PresetJson.cpp`) — compiled bits
+  with no JUCE dependency: the build-info string (from generated `noisefield/Config.h`) and
+  the hand-rolled preset JSON (`model::toJson` / `model::fromJson`). Links `noisefield_dsp`.
 - **`noisefield_engine`** (INTERFACE) — the real-time `engine::SignalGraph` (`SignalGraph.cpp`),
   **framework-free** (no JUCE; denormal protection is the caller's job). Both the app and the
   plugin link it, so `SignalGraph.cpp` compiles once into each. Unit tests link it too.
@@ -114,17 +116,23 @@ belongs in `src/engine/` instead.
 
 ## GUI structure
 
-`app::MainComponent` is the main window (transport, tone, noise, master, meter). Two
-secondary windows are opened on demand via `gui::DetachedWindow` (non-modal, owner nulls its
-`unique_ptr` on close):
+`app::MainComponent` is the main window: transport, a preset menu, a collapsible
+oscilloscope, the dBFS level meter, and the tone / noise / master sections. Two secondary
+windows open on demand via `gui::DetachedWindow` (non-modal, owner nulls its `unique_ptr` on
+close):
 
 - `gui::SettingsComponent` — soft-limiter toggle + `juce::AudioDeviceSelectorComponent`.
 - `gui::GuideView` — renders the embedded `docs/guide.md` with a small hand-rolled Markdown
   subset renderer (`AttributedString` + `TextLayout`). `docs/guide.md` is the source of
   truth; editing it changes the in-app guide (after a rebuild re-embeds it).
 
-Control values and the audio-device state persist via `juce::PropertiesFile`
-(`~/.config/Noisefield/`), written on clean exit.
+**Presets**: factory presets are a `std::vector<model::Preset>` in `src/app/Presets.cpp`;
+user presets are `.nfp` (JSON) files under `~/.config/Noisefield/presets/`, read/written by
+`io::PresetStore`. `model::Preset` is the full flat sound state; `readState()` /
+`applyPreset()` on `MainComponent` convert between it and the controls.
+
+Control values, the scope's expanded state and the audio-device state persist via
+`juce::PropertiesFile` (`~/.config/Noisefield/`), written on clean exit.
 
 ## Conventions
 

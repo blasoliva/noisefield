@@ -15,9 +15,10 @@ medical device.
 
 Noisefield is built 100% AI-assisted.
 
-> Status: **milestone M2 (audible MVP)**. Tone + white noise + mixer + master limiter, with
-> a level meter and device selection. See [`docs/plan.md`](docs/plan.md) for the full plan
-> and [`docs/backlog.md`](docs/backlog.md) for tasks.
+> Status: **M2 done, M3 in progress.** Tone + six noise colours + mixer + soft-limited master,
+> a dBFS meter, a collapsible oscilloscope, factory and user presets, and a VST3/LV2/CLAP
+> plugin. See [`docs/plan.md`](docs/plan.md) for the full plan and
+> [`docs/backlog.md`](docs/backlog.md) for tasks.
 
 ## Download
 
@@ -30,8 +31,9 @@ the VST3 / LV2 / CLAP plugins. To build from source instead, see below.
 
 <p align="center">
   <img src="docs/images/main.png" alt="Noisefield main window" width="440"><br>
-  <em>Main window: transport, the tone source (frequency knob with Hz entry, and level), the
-  noise source (colour and level), the master level, and the dBFS output meter.</em>
+  <em>Main window: transport, the preset menu (factory + saved presets), the tone source
+  (frequency knob with Hz entry, and level), the noise source (colour and level), the master
+  level, and the dBFS output meter.</em>
 </p>
 
 <p align="center">

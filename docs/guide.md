@@ -1,13 +1,13 @@
 # Noisefield — User guide
 
-Noisefield generates a pure tone and white noise, mixes them, and sends the result to your
+Noisefield generates a pure tone and coloured noise, mixes them, and sends the result to your
 audio output. Use it to build a sound that helps in the moment.
 
 ## Getting started
 
 - Press **Play**.
-- Raise **Tone level** and/or **White noise level** from the bottom.
-- Set the **Frequency** and the master **Level** to taste.
+- Pick a **Preset**, or raise the **Tone** and/or **Noise** level from the bottom.
+- Set the **Frequency**, the **Noise colour**, and the master **Level** to taste.
 - **Mute** silences the output instantly without stopping playback.
 
 Start with the master **Level** low and bring it up slowly. All settings are remembered for
@@ -80,9 +80,9 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 
 - **Level** — overall output loudness, applied after the tone and noise are summed.
 
-The status line at the bottom shows the app version, the current sample rate, and the number
-of audio dropouts (xruns) since the device opened. It should stay at 0; if it climbs, raise
-the buffer size in Settings.
+The status line at the bottom shows the current sample rate, the recent peak level in dBFS,
+and the number of audio dropouts (xruns) since the device opened. The xrun count should stay
+at 0; if it climbs, raise the buffer size in Settings.
 
 ## Settings window
 
@@ -104,7 +104,8 @@ Changes here are saved and restored automatically.
 
 - For masking, noise with a touch of tone often works better than either alone.
 - If a tone frequency feels right, type it in so you can return to it exactly.
-- Keep the limiter on and leave headroom on the master, so bringing a layer up never jumps
+- Keep the limiter on and leave headroom on the master, so bringing a level up never jumps
   to a harsh peak.
+- **Save** a mix you like so you can come back to it; delete the ones that don't work.
 
 This app is a personal tool, not a medical device.
