@@ -23,8 +23,9 @@ You never tag by hand and you never edit the version number directly.
    `CMakeLists.txt`, and prepends the new section to `CHANGELOG.md`.
 
 3. **Cut the release: merge that PR.** That is the only manual step. On merge, the `Release`
-   workflow creates the `vX.Y.Z` tag and a draft GitHub Release, then builds the Linux
-   artefacts (AppImage, `.deb`, `VST3/LV2/CLAP` tarball) and publishes it.
+   workflow creates the `vX.Y.Z` tag and the GitHub Release, then builds the Linux artefacts
+   (AppImage, `.deb`, `VST3/LV2/CLAP` tarball) and attaches them. The release shows up first
+   with just the notes; the binaries land a few minutes later when the build finishes.
 
 While the project is `0.x` every release is published as a GitHub **pre-release**.
 

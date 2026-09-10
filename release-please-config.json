@@ -6,7 +6,6 @@
       "release-type": "simple",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": false,
-      "draft": true,
       "extra-files": [
         { "type": "generic", "path": "CMakeLists.txt" }
       ]

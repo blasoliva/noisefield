@@ -2,8 +2,8 @@ name: Release
 
 # Automated releases with release-please. Conventional Commit messages on `main` feed a
 # standing "Release PR" that bumps the version and CHANGELOG.md; merging that PR creates the
-# vX.Y.Z tag and a draft GitHub Release, and the `publish` job below builds the Linux
-# artefacts and publishes it. See docs/releasing.md.
+# vX.Y.Z tag and the GitHub Release, and the `publish` job below builds the Linux artefacts
+# and attaches them. See docs/releasing.md.
 
 on:
   push:
@@ -92,11 +92,10 @@ jobs:
           tar czf "noisefield-plugins-${{ needs.release-please.outputs.version }}-linux-x64.tar.gz" \
             -C "$art" VST3 LV2 CLAP
 
-      - name: Attach artefacts and publish the release
+      - name: Attach the built artefacts to the release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
-          draft: false
           prerelease: ${{ startsWith(needs.release-please.outputs.version, '0.') }}
           files: |
             Noisefield-*-x86_64.AppImage
