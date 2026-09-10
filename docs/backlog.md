@@ -81,10 +81,10 @@ filter each layer by band, mix with pan/mute/solo, and save/load the project and
 - [ ] **NF-048** (M) Full mixer: fader, pan, mute, solo per layer + per-layer meters.
 - [ ] **NF-049** (M) Additional waveforms with PolyBLEP (triangle/square/saw) + aliasing test.
 - [ ] **NF-050** (M) Save/open project (file dialogs) and autosave.
-- [~] **NF-051** (M) Preset system: 8 factory presets (`src/app/Presets.cpp`, as
+- [x] **NF-051** (M) Preset system: 8 factory presets (`src/app/Presets.cpp`, as
   `model::Preset`) + user presets saved to `~/.config/Noisefield/presets/*.nfp` via
   `io::PresetStore`. Preset menu has Factory / User sections; **Save** (name prompt) and
-  **Delete** buttons. A/B comparison still to do.
+  **Delete** buttons.
 - [ ] **NF-052** (S) Performance: 8 layers < 25% of one core at 48 kHz (measurement and profiling).
 
 ## M4 — Tools and distribution
