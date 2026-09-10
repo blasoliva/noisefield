@@ -46,7 +46,8 @@ MainComponent::MainComponent()
     juce::PropertiesFile::Options options;
     options.applicationName = "Noisefield";
     options.filenameSuffix = ".settings";
-    options.folderName = "Noisefield";
+    // On Linux JUCE roots this at "~/<folderName>", so spell out the XDG config dir.
+    options.folderName = ".config/Noisefield";
     options.osxLibrarySubFolder = "Application Support";
     appProperties_.setStorageParameters(options);
 
