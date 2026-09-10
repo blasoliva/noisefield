@@ -17,15 +17,18 @@ Noisefield is built 100% AI-assisted.
 ## Screenshots
 
 <p align="center">
-  <img src="docs/images/main.png" alt="Noisefield main window" width="440">
+  <img src="docs/images/main.png" alt="Noisefield main window" width="440"><br>
+  <em>Main window: transport (play / mute), the tone source (frequency knob with Hz entry, and
+  level), the white-noise source (level and re-seed), the master level, and the output meter.</em>
 </p>
 
 <p align="center">
-  <img src="docs/images/settings.png" alt="Settings window: soft limiter and audio device" width="420">
+  <img src="docs/images/settings.png" alt="Noisefield settings window" width="420"><br>
+  <em>Settings window: the master soft limiter, plus the audio-device selector — output device,
+  active channels, sample rate and buffer size.</em>
 </p>
 
-The soft limiter and audio-device settings live in a separate **Settings** window; a built-in
-**Guide** window (`docs/guide.md`) explains every control.
+A built-in **Guide** window (also at [`docs/guide.md`](docs/guide.md)) explains every control.
 
 ## Tech stack
 
