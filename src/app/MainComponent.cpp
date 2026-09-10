@@ -32,6 +32,11 @@ constexpr int kScopeBlockHeight = 116; // extra height when the scope is expande
 constexpr int kFactoryIdBase = 1; // ComboBox item ids for the factory presets
 constexpr int kUserIdBase = 1000; // ... and the user presets
 
+// Until the layer-list GUI (NF-042) lands, the main window drives two fixed engine layer
+// slots: slot 0 is the tone oscillator, slot 1 is the noise source.
+constexpr int kToneLayer = 0;
+constexpr int kNoiseLayer = 1;
+
 // juce::String(const char*) decodes bytes as ASCII and mangles anything non-ASCII, so route
 // user-facing literals that contain non-ASCII characters (e.g. an em dash) through this.
 juce::String uiString(const char* utf8)
@@ -65,6 +70,16 @@ MainComponent::MainComponent()
     options.folderName = ".config/Noisefield";
     options.osxLibrarySubFolder = "Application Support";
     appProperties_.setStorageParameters(options);
+
+    const auto initLayer = [this](int slot, engine::LayerSource source)
+    {
+        auto& layer = params().layer(slot);
+        layer.source.store(static_cast<int>(source), std::memory_order_relaxed);
+        layer.active.store(true, std::memory_order_relaxed);
+        layer.epoch.store(1, std::memory_order_relaxed);
+    };
+    initLayer(kToneLayer, engine::LayerSource::Oscillator);
+    initLayer(kNoiseLayer, engine::LayerSource::Noise);
 
     playButton_.setClickingTogglesState(true);
     playButton_.onClick = [this]
@@ -131,7 +146,9 @@ MainComponent::MainComponent()
     styleHeading(toneHeading_, "Tone");
     toneEnableButton_.onClick = [this]
     {
-        params().toneEnabled.store(toneEnableButton_.getToggleState(), std::memory_order_relaxed);
+        params()
+            .layer(kToneLayer)
+            .muted.store(!toneEnableButton_.getToggleState(), std::memory_order_relaxed);
     };
 
     frequencySlider_.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -142,21 +159,27 @@ MainComponent::MainComponent()
     frequencySlider_.setNumDecimalPlacesToDisplay(1);
     frequencySlider_.onValueChange = [this]
     {
-        params().toneFrequencyHz.store(static_cast<float>(frequencySlider_.getValue()),
-                                       std::memory_order_relaxed);
+        params()
+            .layer(kToneLayer)
+            .frequencyHz.store(static_cast<float>(frequencySlider_.getValue()),
+                               std::memory_order_relaxed);
     };
 
     configureGainSlider(toneGainSlider_);
     toneGainSlider_.onValueChange = [this]
     {
-        params().toneGainDb.store(static_cast<float>(toneGainSlider_.getValue()),
-                                  std::memory_order_relaxed);
+        params()
+            .layer(kToneLayer)
+            .gainDb.store(static_cast<float>(toneGainSlider_.getValue()),
+                          std::memory_order_relaxed);
     };
 
     styleHeading(noiseHeading_, "Noise");
     noiseEnableButton_.onClick = [this]
     {
-        params().noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
+        params()
+            .layer(kNoiseLayer)
+            .muted.store(!noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
     };
 
     for (size_t i = 0; i < dsp::kNoiseColours.size(); ++i)
@@ -164,21 +187,25 @@ MainComponent::MainComponent()
                                 static_cast<int>(i) + 1);
     noiseColourBox_.onChange = [this]
     {
-        params().noiseColour.store(noiseColourBox_.getSelectedId() - 1, std::memory_order_relaxed);
+        params()
+            .layer(kNoiseLayer)
+            .noiseColour.store(noiseColourBox_.getSelectedId() - 1, std::memory_order_relaxed);
     };
 
     configureGainSlider(noiseGainSlider_);
     noiseGainSlider_.onValueChange = [this]
     {
-        params().noiseGainDb.store(static_cast<float>(noiseGainSlider_.getValue()),
-                                   std::memory_order_relaxed);
+        params()
+            .layer(kNoiseLayer)
+            .gainDb.store(static_cast<float>(noiseGainSlider_.getValue()),
+                          std::memory_order_relaxed);
     };
 
     reseedButton_.onClick = [this]
     {
         const auto seed =
             static_cast<std::uint64_t>(juce::Random::getSystemRandom().nextInt64()) | 1ULL;
-        params().noiseSeed.store(seed, std::memory_order_relaxed);
+        params().layer(kNoiseLayer).seed.store(seed, std::memory_order_relaxed);
     };
 
     styleHeading(masterHeading_, "Master");
@@ -282,20 +309,16 @@ void MainComponent::loadSettings()
 {
     auto* store = appProperties_.getUserSettings();
 
-    frequencySlider_.setValue(store->getDoubleValue(kFreqKey, params().toneFrequencyHz.load()),
-                              juce::dontSendNotification);
-    toneGainSlider_.setValue(store->getDoubleValue(kToneGainKey, params().toneGainDb.load()),
+    frequencySlider_.setValue(store->getDoubleValue(kFreqKey, 220.0), juce::dontSendNotification);
+    toneGainSlider_.setValue(store->getDoubleValue(kToneGainKey, -14.0),
                              juce::dontSendNotification);
-    toneEnableButton_.setToggleState(
-        store->getBoolValue(kToneEnabledKey, params().toneEnabled.load()),
-        juce::dontSendNotification);
-    noiseGainSlider_.setValue(store->getDoubleValue(kNoiseGainKey, params().noiseGainDb.load()),
+    toneEnableButton_.setToggleState(store->getBoolValue(kToneEnabledKey, true),
+                                     juce::dontSendNotification);
+    noiseGainSlider_.setValue(store->getDoubleValue(kNoiseGainKey, -20.0),
                               juce::dontSendNotification);
-    noiseEnableButton_.setToggleState(
-        store->getBoolValue(kNoiseEnabledKey, params().noiseEnabled.load()),
-        juce::dontSendNotification);
-    noiseColourBox_.setSelectedId(store->getIntValue(kNoiseColourKey, params().noiseColour.load()) +
-                                      1,
+    noiseEnableButton_.setToggleState(store->getBoolValue(kNoiseEnabledKey, false),
+                                      juce::dontSendNotification);
+    noiseColourBox_.setSelectedId(store->getIntValue(kNoiseColourKey, 0) + 1,
                                   juce::dontSendNotification);
     masterGainSlider_.setValue(store->getDoubleValue(kMasterGainKey, params().masterGainDb.load()),
                                juce::dontSendNotification);
@@ -354,7 +377,7 @@ model::Preset MainComponent::readState()
     preset.noiseColour = dsp::kNoiseColours[static_cast<size_t>(juce::jlimit(
         0, static_cast<int>(dsp::kNoiseColours.size()) - 1, noiseColourBox_.getSelectedId() - 1))];
     preset.noiseGainDb = noiseGainSlider_.getValue();
-    preset.noiseSeed = params().noiseSeed.load(std::memory_order_relaxed);
+    preset.noiseSeed = params().layer(kNoiseLayer).seed.load(std::memory_order_relaxed);
     preset.masterMute = masterMuteButton_.getToggleState();
     preset.masterGainDb = masterGainSlider_.getValue();
     preset.limiterEnabled = params().limiterEnabled.load(std::memory_order_relaxed);
@@ -448,13 +471,18 @@ void MainComponent::deleteSelectedPreset()
 void MainComponent::pushAllParametersToEngine()
 {
     auto& p = params();
-    p.toneFrequencyHz.store(static_cast<float>(frequencySlider_.getValue()),
-                            std::memory_order_relaxed);
-    p.toneGainDb.store(static_cast<float>(toneGainSlider_.getValue()), std::memory_order_relaxed);
-    p.toneEnabled.store(toneEnableButton_.getToggleState(), std::memory_order_relaxed);
-    p.noiseGainDb.store(static_cast<float>(noiseGainSlider_.getValue()), std::memory_order_relaxed);
-    p.noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
-    p.noiseColour.store(noiseColourBox_.getSelectedId() - 1, std::memory_order_relaxed);
+    auto& tone = p.layer(kToneLayer);
+    auto& noise = p.layer(kNoiseLayer);
+
+    tone.frequencyHz.store(static_cast<float>(frequencySlider_.getValue()),
+                           std::memory_order_relaxed);
+    tone.gainDb.store(static_cast<float>(toneGainSlider_.getValue()), std::memory_order_relaxed);
+    tone.muted.store(!toneEnableButton_.getToggleState(), std::memory_order_relaxed);
+
+    noise.gainDb.store(static_cast<float>(noiseGainSlider_.getValue()), std::memory_order_relaxed);
+    noise.muted.store(!noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
+    noise.noiseColour.store(noiseColourBox_.getSelectedId() - 1, std::memory_order_relaxed);
+
     p.masterGainDb.store(static_cast<float>(masterGainSlider_.getValue()),
                          std::memory_order_relaxed);
     // limiterEnabled is already populated from settings in loadSettings().

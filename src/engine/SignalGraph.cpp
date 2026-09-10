@@ -5,13 +5,15 @@
 #include "dsp/NoiseColour.h"
 
 #include <algorithm>
+#include <cstddef>
 
 namespace noisefield::engine
 {
 
 namespace
 {
-constexpr double kGainRampSeconds = 0.02;
+constexpr double kMasterRampSeconds = 0.02;
+constexpr double kLayerRampSeconds = 0.04; // add/remove crossfades stay inaudible
 
 dsp::NoiseColour colourFromIndex(int index) noexcept
 {
@@ -21,25 +23,36 @@ dsp::NoiseColour colourFromIndex(int index) noexcept
 }
 } // namespace
 
+void SignalGraph::prepareVoice(LayerVoice& voice, const LayerParameters& params) noexcept
+{
+    const double sampleRate = sampleRate_.load(std::memory_order_relaxed);
+
+    voice.oscillator.prepare(sampleRate);
+    voice.oscillator.setFrequencyImmediate(params.frequencyHz.load(std::memory_order_relaxed));
+    voice.oscillator.reset();
+
+    voice.appliedSeed = params.seed.load(std::memory_order_relaxed);
+    voice.noise.setSeed(voice.appliedSeed);
+    voice.tint.setColour(colourFromIndex(params.noiseColour.load(std::memory_order_relaxed)));
+    voice.tint.reset();
+
+    voice.appliedEpoch = params.epoch.load(std::memory_order_relaxed);
+
+    voice.gain.prepare(sampleRate, kLayerRampSeconds);
+    voice.gain.setCurrentAndTarget(0.0f);
+}
+
 void SignalGraph::prepare(double sampleRate, int maxBlockSize)
 {
     sampleRate_.store(sampleRate, std::memory_order_relaxed);
 
-    oscillator_.prepare(sampleRate);
-    oscillator_.setFrequencyImmediate(params_.toneFrequencyHz.load(std::memory_order_relaxed));
+    for (std::size_t i = 0; i < voices_.size(); ++i)
+        prepareVoice(voices_[i], params_.layers[i]);
 
-    appliedNoiseSeed_ = params_.noiseSeed.load(std::memory_order_relaxed);
-    noise_.setSeed(appliedNoiseSeed_);
-    noiseTint_.setColour(colourFromIndex(params_.noiseColour.load(std::memory_order_relaxed)));
-    noiseTint_.reset();
+    masterGain_.prepare(sampleRate, kMasterRampSeconds);
+    masterGain_.setCurrentAndTarget(0.0f);
+
     scope_.reset();
-
-    for (auto* smoother : {&toneGain_, &noiseGain_, &masterGain_})
-    {
-        smoother->prepare(sampleRate, kGainRampSeconds);
-        smoother->setCurrentAndTarget(0.0f);
-    }
-
     scratch_.assign(static_cast<std::size_t>(std::max(maxBlockSize, 0)), 0.0f);
 }
 
@@ -72,6 +85,58 @@ void SignalGraph::publishLevel(const float* block, int numSamples) noexcept
     meterRms_.store(level.rms, std::memory_order_relaxed);
 }
 
+void SignalGraph::renderLayer(LayerVoice& voice, const LayerParameters& params, int frames) noexcept
+{
+    const bool playing = params_.playing.load(std::memory_order_relaxed);
+    const bool active = params.active.load(std::memory_order_relaxed);
+    const bool muted = params.muted.load(std::memory_order_relaxed);
+    const auto epoch = params.epoch.load(std::memory_order_relaxed);
+    const auto source = static_cast<LayerSource>(params.source.load(std::memory_order_relaxed));
+    const auto seed = params.seed.load(std::memory_order_relaxed);
+    const auto colour = colourFromIndex(params.noiseColour.load(std::memory_order_relaxed));
+    const float frequencyHz = params.frequencyHz.load(std::memory_order_relaxed);
+    const float gainDb = params.gainDb.load(std::memory_order_relaxed);
+
+    if (epoch != voice.appliedEpoch)
+    {
+        // Slot (re)assigned: jump the voice to the new configuration with the gain at zero so
+        // it fades in cleanly and no tail of the previous layer leaks through.
+        voice.oscillator.setFrequencyImmediate(frequencyHz);
+        voice.oscillator.reset();
+        voice.noise.setSeed(seed);
+        voice.tint.setColour(colour);
+        voice.tint.reset();
+        voice.gain.setCurrentAndTarget(0.0f);
+        voice.appliedEpoch = epoch;
+        voice.appliedSeed = seed;
+    }
+    else
+    {
+        voice.oscillator.setFrequency(frequencyHz); // ramped internally
+        voice.tint.setColour(colour);               // no-op if unchanged
+        if (seed != voice.appliedSeed)
+        {
+            voice.noise.setSeed(seed);
+            voice.appliedSeed = seed;
+        }
+    }
+
+    voice.gain.setTarget((active && !muted && playing) ? dsp::dbToGain(gainDb) : 0.0f);
+
+    // Idle slot: contributes nothing and is not ramping -- skip it entirely (no CPU, and the
+    // oscillator/noise state stays frozen until the slot is used again).
+    if (!active && voice.gain.current() == 0.0f && !voice.gain.isSmoothing())
+        return;
+
+    for (int i = 0; i < frames; ++i)
+    {
+        const float raw = source == LayerSource::Oscillator
+                              ? voice.oscillator.nextSample()
+                              : voice.tint.process(voice.noise.nextSample());
+        scratch_[static_cast<std::size_t>(i)] += raw * voice.gain.nextValue();
+    }
+}
+
 void SignalGraph::process(float* const* outputChannels,
                           int numOutputChannels,
                           int numSamples) noexcept
@@ -79,35 +144,21 @@ void SignalGraph::process(float* const* outputChannels,
     // Denormal protection is the caller's job (they wrap this in juce::ScopedNoDenormals) so
     // that SignalGraph itself stays free of any framework dependency.
     const bool playing = params_.playing.load(std::memory_order_relaxed);
-    const bool toneOn = playing && params_.toneEnabled.load(std::memory_order_relaxed);
-    const bool noiseOn = playing && params_.noiseEnabled.load(std::memory_order_relaxed);
     const bool limiterOn = params_.limiterEnabled.load(std::memory_order_relaxed);
     const bool masterOn = playing && !params_.masterMute.load(std::memory_order_relaxed);
 
-    toneGain_.setTarget(toneOn ? dsp::dbToGain(params_.toneGainDb.load(std::memory_order_relaxed))
-                               : 0.0f);
-    noiseGain_.setTarget(
-        noiseOn ? dsp::dbToGain(params_.noiseGainDb.load(std::memory_order_relaxed)) : 0.0f);
     masterGain_.setTarget(
         masterOn ? dsp::dbToGain(params_.masterGainDb.load(std::memory_order_relaxed)) : 0.0f);
 
-    oscillator_.setFrequency(params_.toneFrequencyHz.load(std::memory_order_relaxed));
-
-    const auto requestedSeed = params_.noiseSeed.load(std::memory_order_relaxed);
-    if (requestedSeed != appliedNoiseSeed_)
-    {
-        noise_.setSeed(requestedSeed);
-        appliedNoiseSeed_ = requestedSeed;
-    }
-    noiseTint_.setColour(colourFromIndex(params_.noiseColour.load(std::memory_order_relaxed)));
-
     const int frames = std::min(numSamples, static_cast<int>(scratch_.size()));
+
+    std::fill(scratch_.begin(), scratch_.begin() + frames, 0.0f);
+    for (std::size_t i = 0; i < voices_.size(); ++i)
+        renderLayer(voices_[i], params_.layers[i], frames);
 
     for (int i = 0; i < frames; ++i)
     {
-        const float tone = oscillator_.nextSample() * toneGain_.nextValue();
-        const float hiss = noiseTint_.process(noise_.nextSample()) * noiseGain_.nextValue();
-        float sample = (tone + hiss) * masterGain_.nextValue();
+        float sample = scratch_[static_cast<std::size_t>(i)] * masterGain_.nextValue();
         if (limiterOn)
             sample = limiter_.process(sample);
         scratch_[static_cast<std::size_t>(i)] = sample;
