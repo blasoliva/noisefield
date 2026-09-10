@@ -2,8 +2,11 @@
 
 The audio callback runs on a high-priority thread with a hard deadline (one buffer period —
 e.g. 5.3 ms at 256 frames / 48 kHz). Missing the deadline produces an xrun (an audible click).
-Everything reachable from `AudioEngine::audioDeviceIOCallbackWithContext` must obey these
-rules.
+
+The whole real-time path is `engine::SignalGraph::process()`, called from the standalone
+`engine::AudioEngine` callback and from the plugin's `processBlock`. Everything it transitively
+calls must obey these rules. `SignalGraph` is deliberately framework-free — no JUCE — so it
+only ever touches `std` and our own `dsp::` code.
 
 ## Forbidden on the audio thread
 
@@ -20,38 +23,38 @@ rules.
 
 ## Allowed
 
-- Reading/writing `std::atomic` with `std::memory_order_relaxed` (all our GUI↔audio
-  parameters go through `EngineParameters`).
-- Arithmetic, `std::sin`, `std::tanh`, `std::abs`, `std::copy` on pre-sized buffers.
-- `juce::ScopedNoDenormals` (we set it at the top of the callback).
-- `juce::FloatVectorOperations::*`.
+- Reading/writing `std::atomic` with `std::memory_order_relaxed` (all controls flow through
+  `engine::EngineParameters`).
+- Arithmetic, `std::sin`, `std::tanh`, `std::abs`, `std::copy` / `std::fill` on pre-sized
+  buffers.
+- Denormal protection: the callers wrap `SignalGraph::process` in `juce::ScopedNoDenormals`
+  (`SignalGraph` itself stays JUCE-free).
 
 ## Patterns used in Noisefield
 
 | Concern | Solution |
 |---|---|
-| GUI changes a parameter | `std::atomic` field in `EngineParameters`, relaxed load in the callback |
+| Controls change a parameter | `std::atomic` field in `EngineParameters`, relaxed load in `process()`. The plugin mirrors its APVTS into it once per block. |
 | Parameter change would click | `dsp::ParamSmoother` per-sample ramp on gains; `SineOscillator` ramps frequency internally |
-| Scratch buffer | `std::vector<float>` sized once in `audioDeviceAboutToStart` (message thread), only indexed in the callback; the callback clamps `numSamples` to its size defensively |
-| Noise re-seed | GUI writes `noiseSeed`; the callback compares against `appliedNoiseSeed_` and re-seeds in place (no allocation) |
+| Scratch buffer | `std::vector<float>` sized once in `SignalGraph::prepare()` (non-audio thread), only indexed in `process()`; `process()` clamps `numSamples` to its size defensively |
+| Noise re-seed | writer sets `noiseSeed`; `process()` compares against `appliedNoiseSeed_` and re-seeds in place (no allocation) |
 | Meter readout | audio thread does a lock-free `compare_exchange` peak-hold into `std::atomic<float>`; GUI `exchange`s it back to 0 |
-| Denormals | `juce::ScopedNoDenormals` for the whole callback |
+| Oscilloscope | audio thread writes a lock-free SPSC ring (`dsp::ScopeBuffer`); GUI copies the most recent window on a timer |
 | Summing clips | `dsp::SoftLimiter` on the master bus |
 
 ## Auditing
 
-- Read the callback and every function it transitively calls; confirm none of the forbidden
-  list appears.
+- Read `SignalGraph::process` and every function it transitively calls; confirm none of the
+  forbidden list appears.
 - Build with `-DNOISEFIELD_WERROR=ON` so `-Wconversion` and friends stay clean.
 - Manual listening test: 10+ minutes with parameter sweeps at a 256-frame buffer, watching
   the xrun counter in the status bar (target: 0).
 - Optional tooling for deeper audits: `rtsan` (real-time sanitizer, Clang 20+), or
   `perf`/`osnoise` to catch scheduling stalls.
 
-## Known M2 limitations
+## Known limitations
 
-- `AudioEngine::initialise` / `shutdown` and device changes run on the message thread and do
-  allocate — that is fine, they are not the audio thread.
-- If the device delivers a block larger than the size reported to `audioDeviceAboutToStart`,
-  the extra frames are zero-filled rather than rendered. Not observed with ALSA/JACK; revisit
-  if it ever happens.
+- `AudioEngine::initialise` / `shutdown`, `SignalGraph::prepare`, and device changes run on a
+  non-audio thread and do allocate — that is fine, they are not the audio thread.
+- If a block larger than the size passed to `prepare()` arrives, the extra frames are
+  zero-filled rather than rendered. Not observed with ALSA/JACK; revisit if it ever happens.
