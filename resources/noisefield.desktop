@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Noisefield
+GenericName=Tone & Noise Generator
+Comment=Generate tones across a frequency range and mix different types of noise
+Exec=noisefield
+Icon=noisefield
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=noise;tone;frequency;sine;white noise;pink noise;masking;tinnitus;sound;
+StartupNotify=true
