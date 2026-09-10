@@ -18,16 +18,20 @@ next time.
 ### Preset
 
 A starting point that sets every control at once. Pick one, then adjust to taste — the
-preset is not "locked", it just moves the controls. Options:
+preset is not "locked", it just moves the controls.
 
-- **Tinnitus mask** / **Tinnitus mask + tone** — pink noise, with a 4 kHz tone in the second
-  one that you can drag to your own tinnitus pitch.
-- **Focus** — steady pink noise, no tone.
-- **Sleep** — brown noise with a soft 60 Hz hum, quieter master.
-- **Deep rain** — brown noise.
-- **White wash** — plain white noise.
-- **Test tone 1 kHz** — a 1 kHz tone, no noise.
-- **Silence** — everything down.
+- **Menu** — factory presets at the top, your own below:
+  - **Tinnitus mask** / **Tinnitus mask + tone** — pink noise, with a 4 kHz tone in the
+    second one that you can drag to your own tinnitus pitch.
+  - **Focus** — steady pink noise, no tone.
+  - **Sleep** — brown noise with a soft 60 Hz hum, quieter master.
+  - **Deep rain** — brown noise.
+  - **White wash** — plain white noise.
+  - **Test tone 1 kHz** — a 1 kHz tone, no noise.
+  - **Silence** — everything down.
+- **Save** — stores the current settings as a named preset under
+  `~/.config/Noisefield/presets/` (a `.nfp` JSON file). Re-using a name overwrites it.
+- **Delete** — removes the selected user preset (factory presets can't be deleted).
 
 ### Transport
 

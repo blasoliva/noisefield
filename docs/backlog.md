@@ -64,7 +64,11 @@ noise, adjust the mix and the master, and listen for 10 min with no clicks or xr
 **Exit criterion:** create a project with several layers (oscillators and noise of any color),
 filter each layer by band, mix with pan/mute/solo, and save/load the project and presets.
 
-- [ ] **NF-040** (M) `Project` / `Layer` model + JSON serialization with a schema version.
+- [~] **NF-040** (M) `model::Preset` + flat-JSON serialisation (`model::toJson` / `fromJson`,
+  hand-rolled, JUCE-free, `schemaVersion` field, forward-compatible with unknown keys and
+  nested structures). `test_preset_json.cpp` (round trip, defaults, malformed, schema bump).
+  The `Project` / `Layer` structs (with layers array, session settings) wait for the M3
+  engine rework (NF-041); `Preset` covers today's flat single-tone + single-noise state.
 - [ ] **NF-041** (M) Layer management in the engine: add/remove/reorder without glitches (crossfade).
 - [ ] **NF-042** (M) Layer-list GUI: create, delete, reorder, select; per-layer parameter editing.
 - [x] **NF-043** (M) Pink noise (Kellett filter) — `dsp::NoiseTint`, RMS-matched, spectral-tilt test.
@@ -77,7 +81,10 @@ filter each layer by band, mix with pan/mute/solo, and save/load the project and
 - [ ] **NF-048** (M) Full mixer: fader, pan, mute, solo per layer + per-layer meters.
 - [ ] **NF-049** (M) Additional waveforms with PolyBLEP (triangle/square/saw) + aliasing test.
 - [ ] **NF-050** (M) Save/open project (file dialogs) and autosave.
-- [ ] **NF-051** (M) Preset system: factory presets in `resources/`, user save, A/B comparison.
+- [~] **NF-051** (M) Preset system: 8 factory presets (`src/app/Presets.cpp`, as
+  `model::Preset`) + user presets saved to `~/.config/Noisefield/presets/*.nfp` via
+  `io::PresetStore`. Preset menu has Factory / User sections; **Save** (name prompt) and
+  **Delete** buttons. A/B comparison still to do.
 - [ ] **NF-052** (S) Performance: 8 layers < 25% of one core at 48 kHz (measurement and profiling).
 
 ## M4 — Tools and distribution

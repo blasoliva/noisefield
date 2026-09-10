@@ -8,7 +8,8 @@ add_executable(noisefield_tests
     test_soft_limiter.cpp
     test_gain.cpp
     test_level_detector.cpp
-    test_signal_graph.cpp)
+    test_signal_graph.cpp
+    test_preset_json.cpp)
 
 target_link_libraries(noisefield_tests PRIVATE
     noisefield_core

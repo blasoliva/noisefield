@@ -28,6 +28,8 @@ target_sources(noisefield_dsp INTERFACE
     dsp/SoftLimiter.h
     dsp/WhiteNoise.h
     model/Layer.h
+    model/Preset.h
+    model/PresetJson.h
     model/Project.h)
 
 # --------------------------------------------------------------------------------------------
@@ -35,7 +37,10 @@ target_sources(noisefield_dsp INTERFACE
 # --------------------------------------------------------------------------------------------
 add_library(noisefield_core STATIC
     core/BuildInfo.cpp
-    core/BuildInfo.h)
+    core/BuildInfo.h
+    model/PresetJson.cpp
+    model/PresetJson.h
+    model/Preset.h)
 target_include_directories(noisefield_core PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -78,11 +83,13 @@ juce_add_binary_data(noisefield_assets
 set(NOISEFIELD_APP_SOURCES
     app/Main.cpp
     app/MainComponent.cpp
+    app/Presets.cpp
     engine/AudioEngine.cpp
     gui/LevelMeter.cpp
     gui/Oscilloscope.cpp
     gui/SettingsComponent.cpp
-    gui/GuideView.cpp)
+    gui/GuideView.cpp
+    io/PresetStore.cpp)
 
 target_sources(Noisefield PRIVATE
     ${NOISEFIELD_APP_SOURCES}
@@ -94,7 +101,8 @@ target_sources(Noisefield PRIVATE
     gui/LevelMeter.h
     gui/Oscilloscope.h
     gui/SettingsComponent.h
-    gui/GuideView.h)
+    gui/GuideView.h
+    io/PresetStore.h)
 
 set_source_files_properties(${NOISEFIELD_APP_SOURCES} engine/SignalGraph.cpp
     TARGET_DIRECTORY Noisefield

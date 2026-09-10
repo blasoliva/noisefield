@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <string_view>
 
 namespace noisefield::dsp
 {
@@ -44,6 +45,15 @@ inline constexpr const char* noiseColourName(NoiseColour colour) noexcept
         return "Grey";
     }
     return "White";
+}
+
+/// Inverse of noiseColourName(); falls back to White for anything unrecognised.
+inline constexpr NoiseColour noiseColourFromName(std::string_view name) noexcept
+{
+    for (const auto colour : kNoiseColours)
+        if (name == noiseColourName(colour))
+            return colour;
+    return NoiseColour::White;
 }
 
 } // namespace noisefield::dsp

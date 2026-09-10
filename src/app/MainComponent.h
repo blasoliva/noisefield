@@ -4,10 +4,13 @@
 #include "engine/AudioEngine.h"
 #include "gui/LevelMeter.h"
 #include "gui/Oscilloscope.h"
+#include "io/PresetStore.h"
+#include "model/Preset.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include <memory>
+#include <vector>
 
 namespace noisefield::app
 {
@@ -31,7 +34,13 @@ private:
     void loadSettings();
     void saveSettings();
     void pushAllParametersToEngine();
-    void applyPreset(const Preset& preset);
+
+    void applyPreset(const model::Preset& preset);
+    [[nodiscard]] model::Preset readState();
+    void rebuildPresetMenu();
+    void promptSavePreset();
+    void deleteSelectedPreset();
+
     void openSettingsWindow();
     void openGuideWindow();
     void setScopeExpanded(bool expanded);
@@ -54,6 +63,10 @@ private:
 
     juce::Label presetLabel_;
     juce::ComboBox presetBox_;
+    juce::TextButton savePresetButton_{"Save"};
+    juce::TextButton deletePresetButton_{"Delete"};
+    io::PresetStore presetStore_;
+    std::vector<juce::String> userPresetNames_;
 
     juce::Label toneHeading_;
     juce::ToggleButton toneEnableButton_{"Enabled"};
