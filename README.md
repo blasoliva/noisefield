@@ -1,6 +1,9 @@
 # Noisefield
 
 [![CI](https://github.com/blasoliva/noisefield/actions/workflows/ci.yml/badge.svg)](https://github.com/blasoliva/noisefield/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/blasoliva/noisefield?include_prereleases&sort=semver)](https://github.com/blasoliva/noisefield/releases)
+[![License](https://img.shields.io/github/license/blasoliva/noisefield)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Linux-333)
 
 A native Linux desktop app to generate tones across a frequency range and mix different
 types of noise (white, pink, brown, blue, violet, grey) into layered sound fields. The
