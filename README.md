@@ -1,5 +1,7 @@
 # Noisefield
 
+[![CI](https://github.com/blasoliva/noisefield/actions/workflows/ci.yml/badge.svg)](https://github.com/blasoliva/noisefield/actions/workflows/ci.yml)
+
 A native Linux desktop app to generate tones across a frequency range and mix different
 types of noise (white, pink, brown, blue, violet, grey) into layered sound fields. The
 [user guide](docs/guide.md) explains what each control does.
@@ -60,6 +62,9 @@ cmake -B build -DNOISEFIELD_BUILD_TESTS=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
+
+CI (GitHub Actions) builds and runs the test suite on Ubuntu and checks `clang-format` on
+every push and pull request.
 
 ## Repository layout
 
