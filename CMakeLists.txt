@@ -19,6 +19,10 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# Full version string for packaging and the About text. Defaults to the numeric project
+# version; the release workflow overrides it with the tag (e.g. 0.1.0-alpha.1).
+set(NOISEFIELD_VERSION "${PROJECT_VERSION}" CACHE STRING "Full version string")
+
 option(NOISEFIELD_BUILD_TESTS "Build the Catch2 test suite" OFF)
 option(NOISEFIELD_BUILD_PLUGIN "Build the VST3/LV2 plugin" OFF)
 option(NOISEFIELD_PLUGIN_CLAP "Also build a CLAP (fetches clap-juce-extensions)" ON)
@@ -56,3 +60,31 @@ if(NOISEFIELD_BUILD_TESTS)
     include(FetchCatch2)
     add_subdirectory(tests)
 endif()
+
+# --------------------------------------------------------------------------------------------
+# Packaging (CPack). `cpack -G DEB` in the build dir produces noisefield_<version>_amd64.deb.
+# --------------------------------------------------------------------------------------------
+set(CPACK_PACKAGE_NAME "noisefield")
+set(CPACK_PACKAGE_VENDOR "Noisefield")
+set(CPACK_PACKAGE_VERSION "${NOISEFIELD_VERSION}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/blasoliva/noisefield")
+set(CPACK_PACKAGE_CONTACT "Blas Oliva <blasoliva@gmail.com>")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+set(CPACK_STRIP_FILES ON)
+
+# Package only our own install component (not JUCE's install rules), all in one archive.
+set(CPACK_COMPONENTS_ALL noisefield)
+set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+
+set(CPACK_DEBIAN_PACKAGE_SECTION "sound")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON) # derive Depends from the linked libraries
+set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Multimedia")
+set(CPACK_RPM_PACKAGE_LICENSE "GPL-3.0-or-later")
+set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+
+include(CPack)

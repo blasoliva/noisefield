@@ -36,6 +36,14 @@ cmake -B build -DNOISEFIELD_WERROR=ON && cmake --build build
 cmake -B build -DNOISEFIELD_BUILD_PLUGIN=ON && cmake --build build
 # artefacts under build/src/plugin/NoisefieldPlugin_artefacts/<config>/{VST3,LV2,CLAP}/
 
+# Packaging: .deb via CPack; install component for the AppImage
+( cd build && cpack -G DEB )                              # -> build/noisefield_<ver>_amd64.deb
+cmake --install build --component noisefield --prefix AppDir/usr
+
+# Release: push a v* tag -> .github/workflows/release.yml builds+publishes AppImage/.deb/plugins.
+# The tag (minus the leading v) is passed as -DNOISEFIELD_VERSION; a tag with "-" is a pre-release.
+git tag v0.1.0-alpha.1 && git push origin v0.1.0-alpha.1
+
 # Formatting  (CI and local both pin clang-format 23.1.0: `pip install "clang-format==23.1.0"`)
 scripts/check-format.sh          # check
 scripts/check-format.sh --fix    # rewrite

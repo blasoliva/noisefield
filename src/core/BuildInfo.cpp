@@ -7,7 +7,7 @@ namespace noisefield
 
 std::string buildInfoString()
 {
-    return std::string(kProjectName) + ' ' + kVersionString;
+    return std::string(kProjectName) + ' ' + kFullVersion;
 }
 
 } // namespace noisefield

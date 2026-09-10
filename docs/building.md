@@ -69,6 +69,31 @@ configure. Skip it with `-DNOISEFIELD_PLUGIN_CLAP=OFF` if you only want VST3 + L
 The plugin currently uses a generic parameter editor; the full custom UI is not shared with
 it yet.
 
+## Packaging
+
+Pre-built downloads (AppImage, `.deb`, plugin tarball) are attached to each
+[GitHub release](https://github.com/blasoliva/noisefield/releases). To build them yourself:
+
+```sh
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNOISEFIELD_BUILD_PLUGIN=ON
+cmake --build build
+
+# .deb (Debian/Ubuntu)
+( cd build && cpack -G DEB )        # -> build/noisefield_<version>_amd64.deb
+
+# install into an AppDir, then run linuxdeploy over it (see .github/workflows/release.yml)
+cmake --install build --prefix AppDir/usr
+```
+
+`cmake --install` lays the app out under the prefix following the FHS (`bin/noisefield`,
+`share/applications/`, `share/icons/hicolor/`). Pass `-DNOISEFIELD_VERSION=x.y.z-tag` to stamp
+a specific version into the binary and the packages (the release workflow sets it from the
+git tag).
+
+Releases: push a tag matching `project(VERSION ...)`, e.g. `git tag v0.1.0-alpha.1 && git push
+origin v0.1.0-alpha.1`. `.github/workflows/release.yml` then builds everything and publishes
+it; a tag containing `-` is marked as a pre-release.
+
 ## Options
 
 | Option | Default | Effect |
@@ -76,6 +101,7 @@ it yet.
 | `NOISEFIELD_BUILD_TESTS` | `OFF` | Build the Catch2 test suite and register it with CTest |
 | `NOISEFIELD_BUILD_PLUGIN` | `OFF` | Build the VST3/LV2/CLAP plugin |
 | `NOISEFIELD_PLUGIN_CLAP` | `ON` | When the plugin is built, also build a CLAP (fetches `clap-juce-extensions`) |
+| `NOISEFIELD_VERSION` | `project()` version | Full version string stamped into the binary and packages |
 | `NOISEFIELD_WERROR` | `OFF` | `-Werror` plus `-Wconversion` / `-Wsign-conversion` on our own code |
 | `NOISEFIELD_JUCE_TAG` | `8.0.15` | JUCE git tag to build against |
 | `NOISEFIELD_CATCH2_TAG` | `v3.7.1` | Catch2 git tag (only used when tests are on) |

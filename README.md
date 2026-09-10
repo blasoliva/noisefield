@@ -16,6 +16,13 @@ Noisefield is built 100% AI-assisted.
 > a level meter and device selection. See [`docs/plan.md`](docs/plan.md) for the full plan
 > and [`docs/backlog.md`](docs/backlog.md) for tasks.
 
+## Download
+
+Pre-built Linux x86_64 artefacts are on the
+[Releases page](https://github.com/blasoliva/noisefield/releases): an **AppImage**
+(`chmod +x` and run — no install), a **`.deb`** for Debian/Ubuntu, and a **`.tar.gz`** with
+the VST3 / LV2 / CLAP plugins. To build from source instead, see below.
+
 ## Screenshots
 
 <p align="center">

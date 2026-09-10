@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish (Linux x86_64)
+    # Older Ubuntu -> older glibc -> the AppImage / .deb run on more systems.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build pkg-config file desktop-file-utils \
+            libasound2-dev libjack-jackd2-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev \
+            libgl1-mesa-dev libcurl4-openssl-dev
+
+      - name: Version from tag
+        id: v
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache fetched dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: release-deps-${{ runner.os }}-${{ hashFiles('cmake/Fetch*.cmake') }}
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DNOISEFIELD_BUILD_PLUGIN=ON
+          -DNOISEFIELD_VERSION=${{ steps.v.outputs.version }}
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Validate desktop entry
+        run: desktop-file-validate resources/noisefield.desktop
+
+      - name: Package .deb
+        run: |
+          ( cd build && cpack -G DEB )
+          mv build/noisefield_*.deb .
+
+      - name: Package AppImage
+        run: |
+          cmake --install build --component noisefield --prefix AppDir/usr
+          curl -fsSL -o linuxdeploy.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fsSL -o linuxdeploy-plugin-appimage.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export OUTPUT="Noisefield-${{ steps.v.outputs.version }}-x86_64.AppImage"
+          ./linuxdeploy.AppImage --appdir AppDir \
+            --desktop-file AppDir/usr/share/applications/noisefield.desktop \
+            --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/noisefield.png \
+            --output appimage
+
+      - name: Package plugins
+        run: |
+          art=build/src/plugin/NoisefieldPlugin_artefacts/Release
+          tar czf "noisefield-plugins-${{ steps.v.outputs.version }}-linux-x64.tar.gz" \
+            -C "$art" VST3 LV2 CLAP
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Noisefield-*-x86_64.AppImage
+            noisefield_*.deb
+            noisefield-plugins-*-linux-x64.tar.gz
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

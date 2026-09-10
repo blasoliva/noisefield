@@ -107,7 +107,7 @@ target_compile_definitions(Noisefield PRIVATE
     JUCE_USE_CURL=0
     JUCE_STANDALONE_APPLICATION=1
     JUCE_APPLICATION_NAME_STRING="Noisefield"
-    JUCE_APPLICATION_VERSION_STRING="${PROJECT_VERSION}"
+    JUCE_APPLICATION_VERSION_STRING="${NOISEFIELD_VERSION}"
     JUCE_DISPLAY_SPLASH_SCREEN=0
     $<$<CONFIG:Debug>:JUCE_DEBUG=1>)
 
@@ -122,7 +122,32 @@ target_link_libraries(Noisefield PRIVATE
     juce::juce_recommended_config_flags)
 
 # --------------------------------------------------------------------------------------------
-# Plugin build (VST3 / LV2). Opt in with -DNOISEFIELD_BUILD_PLUGIN=ON.
+# Install rules (FHS layout), in the `noisefield` component so `cmake --install --component
+# noisefield` and CPack pick up only our files, not JUCE's own install rules.
+# --------------------------------------------------------------------------------------------
+include(GNUInstallDirs)
+
+install(PROGRAMS "$<TARGET_FILE:Noisefield>"
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    RENAME noisefield
+    COMPONENT noisefield
+    EXCLUDE_FROM_ALL)
+
+install(FILES "${CMAKE_SOURCE_DIR}/resources/noisefield.desktop"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
+    COMPONENT noisefield
+    EXCLUDE_FROM_ALL)
+
+foreach(_sz 128 256 512)
+    install(FILES "${CMAKE_SOURCE_DIR}/resources/icons/noisefield-${_sz}.png"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${_sz}x${_sz}/apps"
+        RENAME noisefield.png
+        COMPONENT noisefield
+        EXCLUDE_FROM_ALL)
+endforeach()
+
+# --------------------------------------------------------------------------------------------
+# Plugin build (VST3 / LV2 / CLAP). Opt in with -DNOISEFIELD_BUILD_PLUGIN=ON.
 # --------------------------------------------------------------------------------------------
 if(NOISEFIELD_BUILD_PLUGIN)
     add_subdirectory(plugin)
