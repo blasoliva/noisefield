@@ -4,7 +4,6 @@
 #include "dsp/NoiseColour.h"
 #include "gui/DetachedWindow.h"
 #include "gui/GuideView.h"
-#include "gui/ScopeView.h"
 #include "gui/SettingsComponent.h"
 
 #include <initializer_list>
@@ -23,7 +22,11 @@ constexpr auto kNoiseEnabledKey = "noiseEnabled";
 constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
 constexpr auto kLimiterKey = "limiterEnabled";
+constexpr auto kScopeExpandedKey = "scopeExpanded";
 constexpr auto kAudioStateKey = "audioDeviceState";
+
+constexpr int kBaseHeight = 470;       // window height with the scope collapsed
+constexpr int kScopeBlockHeight = 116; // extra height when the scope is expanded (100 + gap)
 
 void styleHeading(juce::Label& label, const juce::String& text)
 {
@@ -42,6 +45,7 @@ void configureGainSlider(juce::Slider& slider)
 } // namespace
 
 MainComponent::MainComponent()
+    : oscilloscope_([this](float* dst, int count) { engine_.readScope(dst, count); })
 {
     juce::PropertiesFile::Options options;
     options.applicationName = "Noisefield";
@@ -67,9 +71,10 @@ MainComponent::MainComponent()
         masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
     };
 
+    scopeButton_.setClickingTogglesState(true);
     scopeButton_.onClick = [this]
     {
-        openScopeWindow();
+        setScopeExpanded(scopeButton_.getToggleState());
     };
     guideButton_.onClick = [this]
     {
@@ -156,6 +161,7 @@ MainComponent::MainComponent()
                                                                       &scopeButton_,
                                                                       &guideButton_,
                                                                       &settingsButton_,
+                                                                      &oscilloscope_,
                                                                       &meter_,
                                                                       &toneHeading_,
                                                                       &toneEnableButton_,
@@ -171,7 +177,10 @@ MainComponent::MainComponent()
                                                                       &statusLabel_})
         addAndMakeVisible(c);
 
-    setSize(470, 486);
+    oscilloscope_.setVisible(scopeExpanded_);
+    scopeButton_.setToggleState(scopeExpanded_, juce::dontSendNotification);
+
+    setSize(480, kBaseHeight + (scopeExpanded_ ? kScopeBlockHeight : 0));
     startTimerHz(30);
 }
 
@@ -180,9 +189,21 @@ MainComponent::~MainComponent()
     stopTimer();
     settingsWindow_.reset();
     guideWindow_.reset();
-    scopeWindow_.reset();
     saveSettings();
     engine_.shutdown();
+}
+
+void MainComponent::setScopeExpanded(bool expanded)
+{
+    scopeExpanded_ = expanded;
+    oscilloscope_.setVisible(expanded);
+    scopeButton_.setToggleState(expanded, juce::dontSendNotification);
+
+    const int target = kBaseHeight + (expanded ? kScopeBlockHeight : 0);
+    if (auto* window = findParentComponentOfClass<juce::ResizableWindow>())
+        window->setContentComponentSize(getWidth(), target);
+    else
+        setSize(getWidth(), target);
 }
 
 void MainComponent::openSettingsWindow()
@@ -209,19 +230,6 @@ void MainComponent::openGuideWindow()
         "Noisefield — Guide", std::make_unique<gui::GuideView>(), [this] { guideWindow_.reset(); });
 }
 
-void MainComponent::openScopeWindow()
-{
-    if (scopeWindow_ != nullptr)
-    {
-        scopeWindow_->toFront(true);
-        return;
-    }
-    auto view = std::make_unique<gui::ScopeView>([this](float* dst, int count)
-                                                 { engine_.readScope(dst, count); });
-    scopeWindow_ = std::make_unique<gui::DetachedWindow>(
-        "Noisefield — Scope", std::move(view), [this] { scopeWindow_.reset(); });
-}
-
 void MainComponent::loadSettings()
 {
     auto* store = appProperties_.getUserSettings();
@@ -246,6 +254,8 @@ void MainComponent::loadSettings()
 
     params().limiterEnabled.store(store->getBoolValue(kLimiterKey, params().limiterEnabled.load()),
                                   std::memory_order_relaxed);
+
+    scopeExpanded_ = store->getBoolValue(kScopeExpandedKey, false);
 }
 
 void MainComponent::saveSettings()
@@ -260,6 +270,7 @@ void MainComponent::saveSettings()
     store->setValue(kNoiseColourKey, noiseColourBox_.getSelectedId() - 1);
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
+    store->setValue(kScopeExpandedKey, scopeExpanded_);
 
     if (auto stateXml = engine_.deviceManager().createStateXml())
         store->setValue(kAudioStateKey, stateXml.get());
@@ -318,6 +329,11 @@ void MainComponent::resized()
     scopeButton_.setBounds(transport.removeFromRight(64));
 
     area.removeFromTop(10);
+    if (scopeExpanded_)
+    {
+        oscilloscope_.setBounds(area.removeFromTop(kScopeBlockHeight - 16));
+        area.removeFromTop(16);
+    }
     meter_.setBounds(area.removeFromTop(16));
     area.removeFromTop(16);
 

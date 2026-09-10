@@ -17,6 +17,7 @@ public:
     explicit Oscilloscope(std::function<void(float*, int)> fillLatest);
 
     void paint(juce::Graphics& g) override;
+    void visibilityChanged() override;
 
 private:
     void timerCallback() override;

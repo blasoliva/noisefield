@@ -9,7 +9,14 @@ Oscilloscope::Oscilloscope(std::function<void(float*, int)> fillLatest)
     : fillLatest_(std::move(fillLatest)), window_(static_cast<size_t>(kWindow), 0.0f)
 {
     setInterceptsMouseClicks(false, false);
-    startTimerHz(30);
+}
+
+void Oscilloscope::visibilityChanged()
+{
+    if (isVisible())
+        startTimerHz(30);
+    else
+        stopTimer();
 }
 
 void Oscilloscope::timerCallback()

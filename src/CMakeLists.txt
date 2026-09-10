@@ -73,7 +73,6 @@ set(NOISEFIELD_APP_SOURCES
     engine/AudioEngine.cpp
     gui/LevelMeter.cpp
     gui/Oscilloscope.cpp
-    gui/ScopeView.cpp
     gui/SettingsComponent.cpp
     gui/GuideView.cpp)
 
@@ -86,7 +85,6 @@ target_sources(Noisefield PRIVATE
     gui/DetachedWindow.h
     gui/LevelMeter.h
     gui/Oscilloscope.h
-    gui/ScopeView.h
     gui/SettingsComponent.h
     gui/GuideView.h)
 

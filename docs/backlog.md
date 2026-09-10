@@ -86,8 +86,9 @@ filter each layer by band, mix with pan/mute/solo, and save/load the project and
 session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Flatpak.
 
 - [ ] **NF-060** (M) FFT spectrum analyzer (window, averaging, log scale) fed by a FIFO.
-- [x] **NF-061** (S) Oscilloscope with rising-zero-crossing trigger, in a detached Scope
-  window. Engine feeds it via `dsp::ScopeBuffer` (lock-free SPSC ring); `test_scope_buffer.cpp`.
+- [x] **NF-061** (S) Oscilloscope with rising-zero-crossing trigger, collapsible in the main
+  window (Scope button; window grows/shrinks to fit; state persists). Engine feeds it via
+  `dsp::ScopeBuffer` (lock-free SPSC ring); `test_scope_buffer.cpp`.
 - [~] **NF-062** (S) Master meter: dBFS scale ticks, peak hold, clip latch, peak-dBFS readout
   in the status line. Per-layer meters wait for the M3 layer rework (NF-041/048).
 - [ ] **NF-063** (M) WAV/FLAC recorder of the master bus (streaming to disk from a separate thread).

@@ -2,6 +2,7 @@
 
 #include "engine/AudioEngine.h"
 #include "gui/LevelMeter.h"
+#include "gui/Oscilloscope.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -10,10 +11,10 @@
 namespace noisefield::app
 {
 
-/// Root content component: transport, a tone source (frequency + level), a noise source
-/// (colour + level) and a master level, with a level meter. The soft limiter and audio-device
-/// settings, the oscilloscope, and the user guide each live in their own detached window.
-/// Control values persist between runs.
+/// Root content component: transport, a collapsible oscilloscope, a level meter, a tone
+/// source (frequency + level), a noise source (colour + level) and a master level. The soft
+/// limiter and audio-device settings, and the user guide, live in their own detached windows.
+/// Control values (and the scope's expanded state) persist between runs.
 class MainComponent final : public juce::Component, private juce::Timer
 {
 public:
@@ -31,7 +32,7 @@ private:
     void pushAllParametersToEngine();
     void openSettingsWindow();
     void openGuideWindow();
-    void openScopeWindow();
+    void setScopeExpanded(bool expanded);
 
     engine::EngineParameters& params()
     {
@@ -46,6 +47,7 @@ private:
     juce::TextButton scopeButton_{"Scope"};
     juce::TextButton guideButton_{"Guide"};
     juce::TextButton settingsButton_{"Settings"};
+    gui::Oscilloscope oscilloscope_;
     gui::LevelMeter meter_;
 
     juce::Label toneHeading_;
@@ -64,9 +66,10 @@ private:
 
     juce::Label statusLabel_;
 
+    bool scopeExpanded_ = false;
+
     std::unique_ptr<juce::DocumentWindow> settingsWindow_;
     std::unique_ptr<juce::DocumentWindow> guideWindow_;
-    std::unique_ptr<juce::DocumentWindow> scopeWindow_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

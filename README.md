@@ -25,8 +25,9 @@ Noisefield is built 100% AI-assisted.
 </p>
 
 <p align="center">
-  <img src="docs/images/scope.png" alt="Noisefield oscilloscope window" width="440"><br>
-  <em>Scope window: the master-output oscilloscope, aligned to a rising zero-crossing.</em>
+  <img src="docs/images/main-scope.png" alt="Noisefield with the oscilloscope expanded" width="440"><br>
+  <em>The Scope button expands a master-output oscilloscope in place, aligned to a rising
+  zero-crossing; the window resizes to fit.</em>
 </p>
 
 <p align="center">
