@@ -1,15 +1,37 @@
 name: Release
 
+# Automated releases with release-please. Conventional Commit messages on `main` feed a
+# standing "Release PR" that bumps the version and CHANGELOG.md; merging that PR creates the
+# vX.Y.Z tag and a draft GitHub Release, and the `publish` job below builds the Linux
+# artefacts and publishes it. See docs/releasing.md.
+
 on:
   push:
-    tags: ['v*']
+    branches: [main]
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  release:
+  release-please:
+    name: Maintain the release PR
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
     name: Build and publish (Linux x86_64)
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     # Older Ubuntu -> older glibc -> the AppImage / .deb run on more systems.
     runs-on: ubuntu-22.04
     steps:
@@ -25,10 +47,6 @@ jobs:
             libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev \
             libgl1-mesa-dev libcurl4-openssl-dev
 
-      - name: Version from tag
-        id: v
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
       - name: Cache fetched dependencies
         uses: actions/cache@v4
         with:
@@ -40,7 +58,7 @@ jobs:
           cmake -B build -G Ninja
           -DCMAKE_BUILD_TYPE=Release
           -DNOISEFIELD_BUILD_PLUGIN=ON
-          -DNOISEFIELD_VERSION=${{ steps.v.outputs.version }}
+          -DNOISEFIELD_VERSION=${{ needs.release-please.outputs.version }}
 
       - name: Build
         run: cmake --build build
@@ -62,7 +80,7 @@ jobs:
             https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage
           chmod +x linuxdeploy*.AppImage
           export APPIMAGE_EXTRACT_AND_RUN=1
-          export OUTPUT="Noisefield-${{ steps.v.outputs.version }}-x86_64.AppImage"
+          export OUTPUT="Noisefield-${{ needs.release-please.outputs.version }}-x86_64.AppImage"
           ./linuxdeploy.AppImage --appdir AppDir \
             --desktop-file AppDir/usr/share/applications/noisefield.desktop \
             --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/noisefield.png \
@@ -71,16 +89,17 @@ jobs:
       - name: Package plugins
         run: |
           art=build/src/plugin/NoisefieldPlugin_artefacts/Release
-          tar czf "noisefield-plugins-${{ steps.v.outputs.version }}-linux-x64.tar.gz" \
+          tar czf "noisefield-plugins-${{ needs.release-please.outputs.version }}-linux-x64.tar.gz" \
             -C "$art" VST3 LV2 CLAP
 
-      - name: Publish release
+      - name: Attach artefacts and publish the release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          draft: false
+          prerelease: ${{ startsWith(needs.release-please.outputs.version, '0.') }}
           files: |
             Noisefield-*-x86_64.AppImage
             noisefield_*.deb
             noisefield-plugins-*-linux-x64.tar.gz
-          prerelease: ${{ contains(github.ref_name, '-') }}
-          generate_release_notes: true
           fail_on_unmatched_files: true

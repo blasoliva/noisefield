@@ -42,9 +42,9 @@ cmake -B build -DNOISEFIELD_BUILD_PLUGIN=ON && cmake --build build
 ( cd build && cpack -G DEB )                              # -> build/noisefield_<ver>_amd64.deb
 cmake --install build --component noisefield --prefix AppDir/usr
 
-# Release: push a v* tag -> .github/workflows/release.yml builds+publishes AppImage/.deb/plugins.
-# The tag (minus the leading v) is passed as -DNOISEFIELD_VERSION; a tag with "-" is a pre-release.
-git tag v0.1.0-alpha.1 && git push origin v0.1.0-alpha.1
+# Release: automated by release-please (Conventional Commits -> a standing "Release PR").
+# Merge that PR to cut a release; .github/workflows/release.yml then tags + builds + publishes
+# the AppImage/.deb/plugins. Never tag or bump the version by hand. See docs/releasing.md.
 
 # Formatting  (CI and local both pin clang-format 23.1.0: `pip install "clang-format==23.1.0"`)
 scripts/check-format.sh          # check
@@ -148,10 +148,14 @@ Control values, the scope's expanded state and the audio-device state persist vi
 
 - **All `.md` files are written in English**, regardless of the conversation language.
 - **Git commits**: end the message with `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
-  and nothing else — no `Claude-Session:` line. Commits are grouped by task type
-  (`chore:` / `docs:` / `feat(dsp):` / `feat(engine):` / `feat(gui):` / `test:` / `assets:`).
+  and nothing else — no `Claude-Session:` line. Messages are **Conventional Commits** and
+  release-please reads them to pick the next version, so the type matters: `feat:` → minor
+  bump, `fix:` → patch, `feat!:` / `BREAKING CHANGE:` → (still minor while `0.x`); `docs:`
+  `refactor:` `perf:` `build:` show in the changelog; `ci:` `chore:` `test:` are hidden and
+  never bump. Scope where it helps (`feat(engine):`, `fix(settings):`). See `docs/releasing.md`.
 - **Do not `git push` without explicit confirmation.** Local commits are fine.
-- Default branch is `main`.
+- Default branch is `main`; it requires a PR (direct pushes are blocked). Sign commits with
+  the GPG key whose UID is `blasoliva@gmail.com` (repo-local `user.signingkey`).
 
 ## Known issues / constraints
 

@@ -63,6 +63,8 @@ the reasons in the table.
   buffers/spectra against references.
 - **Quality:** `clang-format`, `clang-tidy`, warnings as errors.
 - **CI:** GitHub Actions — build + tests on Ubuntu LTS.
+- **Releases:** automated with release-please (Conventional Commits → version bump +
+  `CHANGELOG.md` → tag → build + publish). See `docs/releasing.md`.
 - **Packaging:** AppImage (`linuxdeploy`) as the primary format; Flatpak as a secondary
   target; `.deb` optional.
 - **System build dependencies:** `build-essential cmake pkg-config libasound2-dev
