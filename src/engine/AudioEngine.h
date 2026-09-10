@@ -2,6 +2,7 @@
 
 #include "dsp/NoiseTint.h"
 #include "dsp/ParamSmoother.h"
+#include "dsp/ScopeBuffer.h"
 #include "dsp/SineOscillator.h"
 #include "dsp/SoftLimiter.h"
 #include "dsp/WhiteNoise.h"
@@ -47,6 +48,13 @@ public:
     /// Reads the master level and resets the peak hold. Lock-free; call from the GUI thread.
     MeterSnapshot fetchMeterAndReset() noexcept;
 
+    /// Copies the most recent `count` master-bus samples for the oscilloscope. Lock-free;
+    /// call from the GUI thread. `count` must be <= dsp::ScopeBuffer::kCapacity.
+    void readScope(float* dst, int count) noexcept
+    {
+        scope_.readLatest(dst, count);
+    }
+
     /// Underruns/overruns reported by the device since it opened, or -1 if unsupported.
     [[nodiscard]] int xRunCount() const noexcept;
 
@@ -76,6 +84,7 @@ private:
     dsp::WhiteNoise noise_;
     dsp::NoiseTint noiseTint_;
     dsp::SoftLimiter limiter_;
+    dsp::ScopeBuffer scope_;
     dsp::ParamSmoother toneGain_;
     dsp::ParamSmoother noiseGain_;
     dsp::ParamSmoother masterGain_;

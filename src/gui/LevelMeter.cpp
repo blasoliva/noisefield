@@ -2,10 +2,17 @@
 
 #include "dsp/Gain.h"
 
+#include <array>
 #include <cmath>
 
 namespace noisefield::gui
 {
+
+namespace
+{
+constexpr std::array<float, 5> kTicksDb{-48.0f, -36.0f, -24.0f, -12.0f, -6.0f};
+constexpr juce::int64 kClipHoldMs = 3000;
+} // namespace
 
 LevelMeter::LevelMeter()
 {
@@ -17,6 +24,11 @@ float LevelMeter::dbToProportion(float decibels)
     if (decibels <= kFloorDb)
         return 0.0f;
     return juce::jlimit(0.0f, 1.0f, (decibels - kFloorDb) / -kFloorDb);
+}
+
+float LevelMeter::currentPeakDb() const
+{
+    return noisefield::dsp::gainToDb(displayPeak_, kFloorDb);
 }
 
 void LevelMeter::setLevel(float peak, float rms)
@@ -31,12 +43,24 @@ void LevelMeter::setLevel(float peak, float rms)
     const float decay = std::pow(10.0f, -0.05f * 12.0f * (static_cast<float>(elapsed) / 1000.0f));
     displayPeak_ = juce::jmax(peak, displayPeak_ * decay);
 
+    if (peak >= 1.0f)
+    {
+        clipped_ = true;
+        lastClipMs_ = now;
+    }
+    else if (clipped_ && now - lastClipMs_ > kClipHoldMs)
+    {
+        clipped_ = false;
+    }
+
     repaint();
 }
 
 void LevelMeter::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
+    auto clipBox = bounds.removeFromRight(8.0f);
+    bounds.removeFromRight(3.0f);
 
     g.setColour(juce::Colour(0xff0c0d10));
     g.fillRoundedRectangle(bounds, 3.0f);
@@ -56,6 +80,14 @@ void LevelMeter::paint(juce::Graphics& g)
     g.setGradientFill(gradient);
     g.fillRoundedRectangle(fill, 3.0f);
 
+    // Scale ticks.
+    g.setColour(juce::Colour(0x1cffffff));
+    for (const float tickDb : kTicksDb)
+    {
+        const float x = bounds.getX() + bounds.getWidth() * dbToProportion(tickDb);
+        g.fillRect(x, bounds.getY() + 1.0f, 1.0f, bounds.getHeight() - 2.0f);
+    }
+
     if (peakProportion > 0.0f)
     {
         const float x = bounds.getX() + bounds.getWidth() * peakProportion;
@@ -65,6 +97,10 @@ void LevelMeter::paint(juce::Graphics& g)
 
     g.setColour(juce::Colour(0x22ffffff));
     g.drawRoundedRectangle(bounds.reduced(0.5f), 3.0f, 1.0f);
+
+    // Clip latch.
+    g.setColour(clipped_ ? juce::Colour(0xffef4444) : juce::Colour(0xff2a2d34));
+    g.fillRoundedRectangle(clipBox, 2.0f);
 }
 
 } // namespace noisefield::gui

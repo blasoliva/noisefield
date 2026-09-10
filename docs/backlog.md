@@ -86,8 +86,10 @@ filter each layer by band, mix with pan/mute/solo, and save/load the project and
 session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Flatpak.
 
 - [ ] **NF-060** (M) FFT spectrum analyzer (window, averaging, log scale) fed by a FIFO.
-- [ ] **NF-061** (S) Oscilloscope with simple triggering.
-- [ ] **NF-062** (S) Per-layer and master meters with peak hold and a dBFS scale.
+- [x] **NF-061** (S) Oscilloscope with rising-zero-crossing trigger, in a detached Scope
+  window. Engine feeds it via `dsp::ScopeBuffer` (lock-free SPSC ring); `test_scope_buffer.cpp`.
+- [~] **NF-062** (S) Master meter: dBFS scale ticks, peak hold, clip latch, peak-dBFS readout
+  in the status line. Per-layer meters wait for the M3 layer rework (NF-041/048).
 - [ ] **NF-063** (M) WAV/FLAC recorder of the master bus (streaming to disk from a separate thread).
 - [ ] **NF-064** (M) Fixed-duration offline export, faster than real time, with TPDF dither.
 - [ ] **NF-065** (M) Session timer: duration, fade-in/out, automatic stop.
@@ -168,10 +170,13 @@ milestone (or a new one) when they become relevant.
     `CharPointer_ASCII`, so the multi-byte character is mangled. Confirmed via `xprop`
     (`WM_NAME` = `"Noisefield â\302\200\302\224 Guide"`) and in the JUCE source
     (`juce_String.cpp`, the `CharPointer_ASCII` constructor with its explanatory assertion).
-  - **Where:** `src/app/MainComponent.cpp` (`"Noisefield — Guide"`,
-    `"Noisefield — Settings"`).
-  - **Fix direction (not applied):** wrap non-ASCII literals in `juce::CharPointer_UTF8(...)`,
-    or use `juce::String::fromUTF8(...)`, or replace the em dash with an ASCII `-`.
+  - **Where:** any `const char*` UI literal with a non-ASCII char —
+    `src/app/MainComponent.cpp` (`"Noisefield — Guide"`, `"Noisefield — Settings"`,
+    `"Noisefield — Scope"`). New UI strings currently sidestep it by staying ASCII
+    (e.g. `"Oscilloscope (master output)"`).
+  - **Fix direction (not applied):** a small `nf::utf8("...")` helper wrapping
+    `juce::String::fromUTF8`, used for every user-facing literal; or wrap non-ASCII literals
+    in `juce::CharPointer_UTF8(...)`.
   - The Guide *content* is not affected — it is loaded with `String::fromUTF8` and renders
     the em dash correctly.
 

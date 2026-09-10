@@ -68,6 +68,7 @@ void AudioEngine::prepare(double sampleRate, int maxBlockSize)
     noise_.setSeed(appliedNoiseSeed_);
     noiseTint_.setColour(colourFromIndex(params_.noiseColour.load(std::memory_order_relaxed)));
     noiseTint_.reset();
+    scope_.reset();
 
     for (auto* smoother : {&toneGain_, &noiseGain_, &masterGain_})
     {
@@ -148,6 +149,7 @@ void AudioEngine::audioDeviceIOCallbackWithContext(
     }
 
     publishLevel(scratch_.data(), frames);
+    scope_.write(scratch_.data(), frames);
 }
 
 void AudioEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)

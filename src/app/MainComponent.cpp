@@ -1,10 +1,10 @@
 #include "app/MainComponent.h"
 
-#include "core/BuildInfo.h"
 #include "dsp/Constants.h"
 #include "dsp/NoiseColour.h"
 #include "gui/DetachedWindow.h"
 #include "gui/GuideView.h"
+#include "gui/ScopeView.h"
 #include "gui/SettingsComponent.h"
 
 #include <initializer_list>
@@ -67,6 +67,10 @@ MainComponent::MainComponent()
         masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
     };
 
+    scopeButton_.onClick = [this]
+    {
+        openScopeWindow();
+    };
     guideButton_.onClick = [this]
     {
         openGuideWindow();
@@ -149,6 +153,7 @@ MainComponent::MainComponent()
 
     for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
                                                                       &masterMuteButton_,
+                                                                      &scopeButton_,
                                                                       &guideButton_,
                                                                       &settingsButton_,
                                                                       &meter_,
@@ -175,6 +180,7 @@ MainComponent::~MainComponent()
     stopTimer();
     settingsWindow_.reset();
     guideWindow_.reset();
+    scopeWindow_.reset();
     saveSettings();
     engine_.shutdown();
 }
@@ -201,6 +207,19 @@ void MainComponent::openGuideWindow()
     }
     guideWindow_ = std::make_unique<gui::DetachedWindow>(
         "Noisefield — Guide", std::make_unique<gui::GuideView>(), [this] { guideWindow_.reset(); });
+}
+
+void MainComponent::openScopeWindow()
+{
+    if (scopeWindow_ != nullptr)
+    {
+        scopeWindow_->toFront(true);
+        return;
+    }
+    auto view = std::make_unique<gui::ScopeView>([this](float* dst, int count)
+                                                 { engine_.readScope(dst, count); });
+    scopeWindow_ = std::make_unique<gui::DetachedWindow>(
+        "Noisefield — Scope", std::move(view), [this] { scopeWindow_.reset(); });
 }
 
 void MainComponent::loadSettings()
@@ -270,9 +289,11 @@ void MainComponent::timerCallback()
 
     const auto rate = engine_.sampleRate();
     const auto xruns = engine_.xRunCount();
+    const float peakDb = meter_.currentPeakDb();
     juce::String status;
-    status << noisefield::buildInfoString() << "   ";
     status << (rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"));
+    status << "   peak "
+           << (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS";
     status << "   xruns: " << (xruns < 0 ? juce::String("n/a") : juce::String(xruns));
     statusLabel_.setText(status, juce::dontSendNotification);
 }
@@ -287,12 +308,14 @@ void MainComponent::resized()
     auto area = getLocalBounds().reduced(16);
 
     auto transport = area.removeFromTop(30);
-    playButton_.setBounds(transport.removeFromLeft(96));
+    playButton_.setBounds(transport.removeFromLeft(84));
     transport.removeFromLeft(8);
-    masterMuteButton_.setBounds(transport.removeFromLeft(96));
-    settingsButton_.setBounds(transport.removeFromRight(96));
-    transport.removeFromRight(8);
-    guideButton_.setBounds(transport.removeFromRight(80));
+    masterMuteButton_.setBounds(transport.removeFromLeft(84));
+    settingsButton_.setBounds(transport.removeFromRight(84));
+    transport.removeFromRight(6);
+    guideButton_.setBounds(transport.removeFromRight(64));
+    transport.removeFromRight(6);
+    scopeButton_.setBounds(transport.removeFromRight(64));
 
     area.removeFromTop(10);
     meter_.setBounds(area.removeFromTop(16));

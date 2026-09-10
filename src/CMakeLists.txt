@@ -23,6 +23,7 @@ target_sources(noisefield_dsp INTERFACE
     dsp/NoiseColour.h
     dsp/NoiseTint.h
     dsp/ParamSmoother.h
+    dsp/ScopeBuffer.h
     dsp/SineOscillator.h
     dsp/SoftLimiter.h
     dsp/WhiteNoise.h
@@ -71,6 +72,8 @@ set(NOISEFIELD_APP_SOURCES
     app/MainComponent.cpp
     engine/AudioEngine.cpp
     gui/LevelMeter.cpp
+    gui/Oscilloscope.cpp
+    gui/ScopeView.cpp
     gui/SettingsComponent.cpp
     gui/GuideView.cpp)
 
@@ -82,6 +85,8 @@ target_sources(Noisefield PRIVATE
     engine/EngineParameters.h
     gui/DetachedWindow.h
     gui/LevelMeter.h
+    gui/Oscilloscope.h
+    gui/ScopeView.h
     gui/SettingsComponent.h
     gui/GuideView.h)
 

@@ -10,10 +10,10 @@
 namespace noisefield::app
 {
 
-/// Root content component for the M2 MVP: transport, a tone source (frequency + level), a
-/// white-noise source (level) and a master level, with a level meter. The soft limiter and
-/// audio-device settings live in a detached Settings window; the user guide in a detached
-/// Guide window. Control values persist between runs.
+/// Root content component: transport, a tone source (frequency + level), a noise source
+/// (colour + level) and a master level, with a level meter. The soft limiter and audio-device
+/// settings, the oscilloscope, and the user guide each live in their own detached window.
+/// Control values persist between runs.
 class MainComponent final : public juce::Component, private juce::Timer
 {
 public:
@@ -31,6 +31,7 @@ private:
     void pushAllParametersToEngine();
     void openSettingsWindow();
     void openGuideWindow();
+    void openScopeWindow();
 
     engine::EngineParameters& params()
     {
@@ -42,6 +43,7 @@ private:
 
     juce::TextButton playButton_{"Play"};
     juce::TextButton masterMuteButton_{"Mute"};
+    juce::TextButton scopeButton_{"Scope"};
     juce::TextButton guideButton_{"Guide"};
     juce::TextButton settingsButton_{"Settings"};
     gui::LevelMeter meter_;
@@ -64,6 +66,7 @@ private:
 
     std::unique_ptr<juce::DocumentWindow> settingsWindow_;
     std::unique_ptr<juce::DocumentWindow> guideWindow_;
+    std::unique_ptr<juce::DocumentWindow> scopeWindow_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

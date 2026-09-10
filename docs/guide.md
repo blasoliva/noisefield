@@ -19,10 +19,20 @@ next time.
 
 - **Play / Stop** — starts and stops audio processing.
 - **Mute** — instantly silences the master output; playback keeps running.
-- **Level meter** — master output level. The filled bar is RMS (perceived loudness); the
-  moving mark is the recent peak and turns red at 0 dBFS.
+- **Level meter** — master output level on a dBFS scale (faint ticks at −48, −36, −24, −12,
+  −6). The filled bar is RMS (perceived loudness); the moving mark is the recent peak and
+  turns red at 0 dBFS. The small block on the right is a clip latch: it lights red if the
+  signal hits 0 dBFS and clears itself after a few quiet seconds. The status line shows the
+  current peak in dBFS.
+- **Scope** — opens the oscilloscope window.
 - **Guide** — opens this guide.
 - **Settings** — opens the audio-device settings and the soft limiter.
+
+### Scope window
+
+- **Oscilloscope** — the master output waveform over time. It is aligned to a rising
+  zero-crossing, so a steady tone appears to stand still. Use it to see the tone shape, how
+  much noise is mixed in, and whether the signal is being clipped by the limiter.
 
 ### Tone
 
