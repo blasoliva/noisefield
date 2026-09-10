@@ -131,13 +131,15 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 - [x] **NF-082** (M) **`.deb` via CPack.** `Release` + `CPACK_STRIP_FILES`, deps via
   `CPACK_DEBIAN_PACKAGE_SHLIBDEPS`, `sound` section, maintainer / homepage. `CPACK_RPM_*`
   set too. Verified: `noisefield_<version>_amd64.deb` with the right layout and metadata.
-- [x] **NF-083** (M) **Release workflow** (`.github/workflows/release.yml`): on a `v*` tag,
-  `Release` build on `ubuntu-22.04` → `.deb` (NF-082) + AppImage (NF-071) + plugin
-  `.tar.gz` (VST3/LV2/CLAP) → attached to the GitHub Release
-  (`softprops/action-gh-release`, `generate_release_notes`). A tag containing `-` is marked
-  pre-release. `NOISEFIELD_VERSION` (from the tag) is stamped into the binary and packages.
-- [ ] **NF-084** (S) `CHANGELOG.md` and per-release notes (feeds NF-076; the workflow uses
-  GitHub's auto-generated notes for now).
+- [x] **NF-083** (M) **Release workflow** (`.github/workflows/release.yml`): automated with
+  **release-please** — Conventional Commits on `main` drive a standing "Release PR" (version
+  bump + `CHANGELOG.md`); merging it tags `vX.Y.Z` and the `publish` job builds `.deb`
+  (NF-082) + AppImage (NF-071) + plugin `.tar.gz` (VST3/LV2/CLAP) on `ubuntu-22.04` and
+  publishes the GitHub Release. `NOISEFIELD_VERSION` is stamped into the binary and packages;
+  every `0.x` is a pre-release. Config in `release-please-config.json` /
+  `.release-please-manifest.json`; process in `docs/releasing.md`.
+- [x] **NF-084** (S) `CHANGELOG.md` and per-release notes — maintained automatically by
+  release-please from the commit history (NF-083). Feeds NF-076.
 - [ ] **NF-085** (S) Ship the plugins in the `.deb` too (install to `/usr/lib/{vst3,lv2,clap}`
   behind an option), or a separate `noisefield-plugins.deb`.
 
