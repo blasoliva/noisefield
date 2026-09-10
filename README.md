@@ -13,6 +13,21 @@ Noisefield is built 100% AI-assisted.
 > a level meter and device selection. See [`docs/plan.md`](docs/plan.md) for the full plan
 > and [`docs/backlog.md`](docs/backlog.md) for tasks.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/images/main.png" alt="Noisefield main window" width="440">
+</p>
+
+<p align="center">
+  <img src="docs/images/settings.png" alt="Settings window: soft limiter and audio device" width="380">
+  &nbsp;
+  <img src="docs/images/guide.png" alt="Built-in guide window" width="380">
+</p>
+
+The soft limiter and audio-device settings live in a separate **Settings** window; a built-in
+**Guide** window explains every control.
+
 ## Tech stack
 
 - **C++20** + **[JUCE 8](https://juce.com/)** (fetched automatically by CMake)
