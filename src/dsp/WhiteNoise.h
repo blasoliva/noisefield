@@ -52,7 +52,7 @@ private:
         return (x << k) | (x >> (64 - k));
     }
 
-    std::uint64_t state_[4] {};
+    std::uint64_t state_[4]{};
 };
 
 /// White noise generator (flat power spectral density). Other noise colours (pink, brown,
@@ -62,9 +62,15 @@ class WhiteNoise
 public:
     explicit WhiteNoise(std::uint64_t seed = 1) noexcept : rng_(seed) {}
 
-    void setSeed(std::uint64_t seed) noexcept { rng_ = Xoshiro256pp(seed); }
+    void setSeed(std::uint64_t seed) noexcept
+    {
+        rng_ = Xoshiro256pp(seed);
+    }
 
-    float nextSample() noexcept { return rng_.nextBipolarFloat(); }
+    float nextSample() noexcept
+    {
+        return rng_.nextBipolarFloat();
+    }
 
 private:
     Xoshiro256pp rng_;

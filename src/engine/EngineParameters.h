@@ -12,20 +12,20 @@ namespace noisefield::engine
 struct EngineParameters
 {
     // Transport / master
-    std::atomic<bool> playing { false };
-    std::atomic<bool> masterMute { false };
-    std::atomic<float> masterGainDb { -6.0f };
-    std::atomic<bool> limiterEnabled { true };
+    std::atomic<bool> playing{false};
+    std::atomic<bool> masterMute{false};
+    std::atomic<float> masterGainDb{-6.0f};
+    std::atomic<bool> limiterEnabled{true};
 
     // Tone source
-    std::atomic<bool> toneEnabled { true };
-    std::atomic<float> toneFrequencyHz { 220.0f };
-    std::atomic<float> toneGainDb { -14.0f };
+    std::atomic<bool> toneEnabled{true};
+    std::atomic<float> toneFrequencyHz{220.0f};
+    std::atomic<float> toneGainDb{-14.0f};
 
     // Noise source
-    std::atomic<bool> noiseEnabled { false };
-    std::atomic<float> noiseGainDb { -20.0f };
-    std::atomic<std::uint64_t> noiseSeed { 1 };
+    std::atomic<bool> noiseEnabled{false};
+    std::atomic<float> noiseGainDb{-20.0f};
+    std::atomic<std::uint64_t> noiseSeed{1};
 };
 
 /// Snapshot of the master output level, produced by the audio thread and consumed by the

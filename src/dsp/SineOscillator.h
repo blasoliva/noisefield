@@ -39,7 +39,10 @@ public:
         updateIncrement(frequency_.current());
     }
 
-    void reset() noexcept { phase_ = 0.0; }
+    void reset() noexcept
+    {
+        phase_ = 0.0;
+    }
 
     /// Advances by one sample and returns the output in [-1, 1].
     float nextSample() noexcept

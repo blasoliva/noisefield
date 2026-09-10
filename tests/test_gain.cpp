@@ -21,6 +21,6 @@ TEST_CASE("dbToGain snaps to silence at or below minus infinity", "[dsp]")
 
 TEST_CASE("gainToDb is the inverse of dbToGain in range", "[dsp]")
 {
-    for (float db : { -48.0f, -24.0f, -12.0f, -3.0f, 0.0f })
+    for (float db : {-48.0f, -24.0f, -12.0f, -3.0f, 0.0f})
         REQUIRE_THAT(gainToDb(dbToGain(db)), Catch::Matchers::WithinAbs(db, 1.0e-3));
 }

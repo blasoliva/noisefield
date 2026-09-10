@@ -22,7 +22,8 @@ float LevelMeter::dbToProportion(float decibels)
 void LevelMeter::setLevel(float peak, float rms)
 {
     const auto now = juce::Time::currentTimeMillis();
-    const auto elapsed = lastUpdateMs_ == 0 ? 16 : juce::jlimit<juce::int64>(1, 200, now - lastUpdateMs_);
+    const auto elapsed =
+        lastUpdateMs_ == 0 ? 16 : juce::jlimit<juce::int64>(1, 200, now - lastUpdateMs_);
     lastUpdateMs_ = now;
 
     // RMS follows quickly; peak holds then decays ~ 12 dB/s so short transients stay visible.
@@ -44,8 +45,13 @@ void LevelMeter::paint(juce::Graphics& g)
     const float peakProportion = dbToProportion(noisefield::dsp::gainToDb(displayPeak_, kFloorDb));
 
     auto fill = bounds.withWidth(bounds.getWidth() * rmsProportion);
-    juce::ColourGradient gradient(juce::Colour(0xff38bdf8), bounds.getX(), 0.0f,
-                                  juce::Colour(0xffef4444), bounds.getRight(), 0.0f, false);
+    juce::ColourGradient gradient(juce::Colour(0xff38bdf8),
+                                  bounds.getX(),
+                                  0.0f,
+                                  juce::Colour(0xffef4444),
+                                  bounds.getRight(),
+                                  0.0f,
+                                  false);
     gradient.addColour(0.8, juce::Colour(0xfffacc15));
     g.setGradientFill(gradient);
     g.fillRoundedRectangle(fill, 3.0f);

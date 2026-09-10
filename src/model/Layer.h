@@ -55,7 +55,7 @@ struct Layer
     dsp::NoiseColour noiseColour = dsp::NoiseColour::White;
     std::uint64_t noiseSeed = 1;
 
-    BandFilter filter {};
+    BandFilter filter{};
 
     // Mix parameters
     float gainDb = -12.0f;

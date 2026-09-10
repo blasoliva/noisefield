@@ -12,8 +12,9 @@ SettingsComponent::SettingsComponent(engine::AudioEngine& engine)
     limiterHeading_.setColour(juce::Label::textColourId, juce::Colour(0xffb9c0c8));
     addAndMakeVisible(limiterHeading_);
 
-    limiterButton_.setToggleState(engine_.parameters().limiterEnabled.load(std::memory_order_relaxed),
-                                  juce::dontSendNotification);
+    limiterButton_.setToggleState(
+        engine_.parameters().limiterEnabled.load(std::memory_order_relaxed),
+        juce::dontSendNotification);
     limiterButton_.onClick = [this]
     {
         engine_.parameters().limiterEnabled.store(limiterButton_.getToggleState(),

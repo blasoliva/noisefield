@@ -14,8 +14,7 @@ namespace noisefield::app
 /// white-noise source (level) and a master level, with a level meter. The soft limiter and
 /// audio-device settings live in a detached Settings window; the user guide in a detached
 /// Guide window. Control values persist between runs.
-class MainComponent final : public juce::Component,
-                            private juce::Timer
+class MainComponent final : public juce::Component, private juce::Timer
 {
 public:
     MainComponent();
@@ -33,26 +32,29 @@ private:
     void openSettingsWindow();
     void openGuideWindow();
 
-    engine::EngineParameters& params() { return engine_.parameters(); }
+    engine::EngineParameters& params()
+    {
+        return engine_.parameters();
+    }
 
     juce::ApplicationProperties appProperties_;
     engine::AudioEngine engine_;
 
-    juce::TextButton playButton_ { "Play" };
-    juce::TextButton masterMuteButton_ { "Mute" };
-    juce::TextButton guideButton_ { "Guide" };
-    juce::TextButton settingsButton_ { "Settings" };
+    juce::TextButton playButton_{"Play"};
+    juce::TextButton masterMuteButton_{"Mute"};
+    juce::TextButton guideButton_{"Guide"};
+    juce::TextButton settingsButton_{"Settings"};
     gui::LevelMeter meter_;
 
     juce::Label toneHeading_;
-    juce::ToggleButton toneEnableButton_ { "Enabled" };
+    juce::ToggleButton toneEnableButton_{"Enabled"};
     juce::Slider frequencySlider_;
     juce::Slider toneGainSlider_;
 
     juce::Label noiseHeading_;
-    juce::ToggleButton noiseEnableButton_ { "Enabled" };
+    juce::ToggleButton noiseEnableButton_{"Enabled"};
     juce::Slider noiseGainSlider_;
-    juce::TextButton reseedButton_ { "Re-seed" };
+    juce::TextButton reseedButton_{"Re-seed"};
 
     juce::Label masterHeading_;
     juce::Slider masterGainSlider_;

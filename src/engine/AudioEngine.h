@@ -1,8 +1,8 @@
 #pragma once
 
+#include "dsp/ParamSmoother.h"
 #include "dsp/SineOscillator.h"
 #include "dsp/SoftLimiter.h"
-#include "dsp/ParamSmoother.h"
 #include "dsp/WhiteNoise.h"
 #include "engine/EngineParameters.h"
 
@@ -33,8 +33,15 @@ public:
     juce::String initialise(const juce::XmlElement* savedState);
     void shutdown();
 
-    EngineParameters& parameters() noexcept { return params_; }
-    juce::AudioDeviceManager& deviceManager() noexcept { return deviceManager_; }
+    EngineParameters& parameters() noexcept
+    {
+        return params_;
+    }
+
+    juce::AudioDeviceManager& deviceManager() noexcept
+    {
+        return deviceManager_;
+    }
 
     /// Reads the master level and resets the peak hold. Lock-free; call from the GUI thread.
     MeterSnapshot fetchMeterAndReset() noexcept;
@@ -48,12 +55,13 @@ public:
     }
 
 private:
-    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
-                                          int numInputChannels,
-                                          float* const* outputChannelData,
-                                          int numOutputChannels,
-                                          int numSamples,
-                                          const juce::AudioIODeviceCallbackContext& context) override;
+    void
+    audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
+                                     int numInputChannels,
+                                     float* const* outputChannelData,
+                                     int numOutputChannels,
+                                     int numSamples,
+                                     const juce::AudioIODeviceCallbackContext& context) override;
     void audioDeviceAboutToStart(juce::AudioIODevice* device) override;
     void audioDeviceStopped() override;
 
@@ -73,10 +81,10 @@ private:
     std::vector<float> scratch_;
     std::uint64_t appliedNoiseSeed_ = 1;
 
-    std::atomic<double> sampleRate_ { 0.0 };
-    std::atomic<float> meterPeak_ { 0.0f };
-    std::atomic<float> meterRms_ { 0.0f };
-    std::atomic<bool> running_ { false };
+    std::atomic<double> sampleRate_{0.0};
+    std::atomic<float> meterPeak_{0.0f};
+    std::atomic<float> meterRms_{0.0f};
+    std::atomic<bool> running_{false};
 };
 
 } // namespace noisefield::engine

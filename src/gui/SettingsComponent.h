@@ -22,7 +22,7 @@ private:
     engine::AudioEngine& engine_;
 
     juce::Label limiterHeading_;
-    juce::ToggleButton limiterButton_ { "Soft limiter" };
+    juce::ToggleButton limiterButton_{"Soft limiter"};
     juce::Label limiterHint_;
 
     juce::Label deviceHeading_;

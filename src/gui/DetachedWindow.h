@@ -17,11 +17,10 @@ public:
     DetachedWindow(const juce::String& name,
                    std::unique_ptr<juce::Component> content,
                    std::function<void()> onClose)
-        : juce::DocumentWindow(
-              name,
-              juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(
-                  juce::ResizableWindow::backgroundColourId),
-              juce::DocumentWindow::closeButton),
+        : juce::DocumentWindow(name,
+                               juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(
+                                   juce::ResizableWindow::backgroundColourId),
+                               juce::DocumentWindow::closeButton),
           onClose_(std::move(onClose))
     {
         setUsingNativeTitleBar(true);

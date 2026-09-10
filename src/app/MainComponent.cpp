@@ -64,12 +64,20 @@ MainComponent::MainComponent()
         masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
     };
 
-    guideButton_.onClick = [this] { openGuideWindow(); };
-    settingsButton_.onClick = [this] { openSettingsWindow(); };
+    guideButton_.onClick = [this]
+    {
+        openGuideWindow();
+    };
+    settingsButton_.onClick = [this]
+    {
+        openSettingsWindow();
+    };
 
     styleHeading(toneHeading_, "Tone");
     toneEnableButton_.onClick = [this]
-    { params().toneEnabled.store(toneEnableButton_.getToggleState(), std::memory_order_relaxed); };
+    {
+        params().toneEnabled.store(toneEnableButton_.getToggleState(), std::memory_order_relaxed);
+    };
 
     frequencySlider_.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     frequencySlider_.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 96, 22);
@@ -92,7 +100,9 @@ MainComponent::MainComponent()
 
     styleHeading(noiseHeading_, "White noise");
     noiseEnableButton_.onClick = [this]
-    { params().noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed); };
+    {
+        params().noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
+    };
 
     configureGainSlider(noiseGainSlider_);
     noiseGainSlider_.onValueChange = [this]
@@ -126,11 +136,22 @@ MainComponent::MainComponent()
     if (const auto error = engine_.initialise(audioState.get()); error.isNotEmpty())
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
-    for (juce::Component* c : std::initializer_list<juce::Component*> {
-             &playButton_, &masterMuteButton_, &guideButton_, &settingsButton_, &meter_,
-             &toneHeading_, &toneEnableButton_, &frequencySlider_, &toneGainSlider_, &noiseHeading_,
-             &noiseEnableButton_, &noiseGainSlider_, &reseedButton_, &masterHeading_,
-             &masterGainSlider_, &statusLabel_ })
+    for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
+                                                                      &masterMuteButton_,
+                                                                      &guideButton_,
+                                                                      &settingsButton_,
+                                                                      &meter_,
+                                                                      &toneHeading_,
+                                                                      &toneEnableButton_,
+                                                                      &frequencySlider_,
+                                                                      &toneGainSlider_,
+                                                                      &noiseHeading_,
+                                                                      &noiseEnableButton_,
+                                                                      &noiseGainSlider_,
+                                                                      &reseedButton_,
+                                                                      &masterHeading_,
+                                                                      &masterGainSlider_,
+                                                                      &statusLabel_})
         addAndMakeVisible(c);
 
     setSize(470, 470);
@@ -153,9 +174,10 @@ void MainComponent::openSettingsWindow()
         settingsWindow_->toFront(true);
         return;
     }
-    settingsWindow_ = std::make_unique<gui::DetachedWindow>(
-        "Noisefield — Settings", std::make_unique<gui::SettingsComponent>(engine_),
-        [this] { settingsWindow_.reset(); });
+    settingsWindow_ =
+        std::make_unique<gui::DetachedWindow>("Noisefield — Settings",
+                                              std::make_unique<gui::SettingsComponent>(engine_),
+                                              [this] { settingsWindow_.reset(); });
 }
 
 void MainComponent::openGuideWindow()
@@ -166,8 +188,7 @@ void MainComponent::openGuideWindow()
         return;
     }
     guideWindow_ = std::make_unique<gui::DetachedWindow>(
-        "Noisefield — Guide", std::make_unique<gui::GuideView>(),
-        [this] { guideWindow_.reset(); });
+        "Noisefield — Guide", std::make_unique<gui::GuideView>(), [this] { guideWindow_.reset(); });
 }
 
 void MainComponent::loadSettings()
@@ -178,8 +199,9 @@ void MainComponent::loadSettings()
                               juce::dontSendNotification);
     toneGainSlider_.setValue(store->getDoubleValue(kToneGainKey, params().toneGainDb.load()),
                              juce::dontSendNotification);
-    toneEnableButton_.setToggleState(store->getBoolValue(kToneEnabledKey, params().toneEnabled.load()),
-                                     juce::dontSendNotification);
+    toneEnableButton_.setToggleState(
+        store->getBoolValue(kToneEnabledKey, params().toneEnabled.load()),
+        juce::dontSendNotification);
     noiseGainSlider_.setValue(store->getDoubleValue(kNoiseGainKey, params().noiseGainDb.load()),
                               juce::dontSendNotification);
     noiseEnableButton_.setToggleState(
@@ -213,12 +235,14 @@ void MainComponent::saveSettings()
 void MainComponent::pushAllParametersToEngine()
 {
     auto& p = params();
-    p.toneFrequencyHz.store(static_cast<float>(frequencySlider_.getValue()), std::memory_order_relaxed);
+    p.toneFrequencyHz.store(static_cast<float>(frequencySlider_.getValue()),
+                            std::memory_order_relaxed);
     p.toneGainDb.store(static_cast<float>(toneGainSlider_.getValue()), std::memory_order_relaxed);
     p.toneEnabled.store(toneEnableButton_.getToggleState(), std::memory_order_relaxed);
     p.noiseGainDb.store(static_cast<float>(noiseGainSlider_.getValue()), std::memory_order_relaxed);
     p.noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
-    p.masterGainDb.store(static_cast<float>(masterGainSlider_.getValue()), std::memory_order_relaxed);
+    p.masterGainDb.store(static_cast<float>(masterGainSlider_.getValue()),
+                         std::memory_order_relaxed);
     // limiterEnabled is already populated from settings in loadSettings().
 }
 

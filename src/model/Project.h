@@ -32,9 +32,9 @@ struct Project
     static constexpr int kSchemaVersion = 1;
 
     std::string name = "Untitled";
-    std::vector<Layer> layers {};
-    MasterBus master {};
-    SessionSettings session {};
+    std::vector<Layer> layers{};
+    MasterBus master{};
+    SessionSettings session{};
 };
 
 } // namespace noisefield::model

@@ -60,7 +60,7 @@ void AudioEngine::prepare(double sampleRate, int maxBlockSize)
     appliedNoiseSeed_ = params_.noiseSeed.load(std::memory_order_relaxed);
     noise_.setSeed(appliedNoiseSeed_);
 
-    for (auto* smoother : { &toneGain_, &noiseGain_, &masterGain_ })
+    for (auto* smoother : {&toneGain_, &noiseGain_, &masterGain_})
     {
         smoother->prepare(sampleRate, kGainRampSeconds);
         smoother->setCurrentAndTarget(0.0f);
@@ -74,21 +74,21 @@ void AudioEngine::publishLevel(const float* block, int numSamples) noexcept
     const auto level = dsp::measureBlock(block, numSamples);
 
     float previousPeak = meterPeak_.load(std::memory_order_relaxed);
-    while (level.peak > previousPeak
-           && ! meterPeak_.compare_exchange_weak(previousPeak, level.peak,
-                                                 std::memory_order_relaxed))
+    while (level.peak > previousPeak &&
+           !meterPeak_.compare_exchange_weak(previousPeak, level.peak, std::memory_order_relaxed))
     {
         // previousPeak reloaded by compare_exchange_weak; retry.
     }
     meterRms_.store(level.rms, std::memory_order_relaxed);
 }
 
-void AudioEngine::audioDeviceIOCallbackWithContext(const float* const* /*inputChannelData*/,
-                                                   int /*numInputChannels*/,
-                                                   float* const* outputChannelData,
-                                                   int numOutputChannels,
-                                                   int numSamples,
-                                                   const juce::AudioIODeviceCallbackContext& /*context*/)
+void AudioEngine::audioDeviceIOCallbackWithContext(
+    const float* const* /*inputChannelData*/,
+    int /*numInputChannels*/,
+    float* const* outputChannelData,
+    int numOutputChannels,
+    int numSamples,
+    const juce::AudioIODeviceCallbackContext& /*context*/)
 {
     const juce::ScopedNoDenormals noDenormals;
 
@@ -96,7 +96,7 @@ void AudioEngine::audioDeviceIOCallbackWithContext(const float* const* /*inputCh
     const bool toneOn = playing && params_.toneEnabled.load(std::memory_order_relaxed);
     const bool noiseOn = playing && params_.noiseEnabled.load(std::memory_order_relaxed);
     const bool limiterOn = params_.limiterEnabled.load(std::memory_order_relaxed);
-    const bool masterOn = playing && ! params_.masterMute.load(std::memory_order_relaxed);
+    const bool masterOn = playing && !params_.masterMute.load(std::memory_order_relaxed);
 
     toneGain_.setTarget(toneOn ? dsp::dbToGain(params_.toneGainDb.load(std::memory_order_relaxed))
                                : 0.0f);

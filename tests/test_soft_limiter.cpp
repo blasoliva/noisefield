@@ -21,7 +21,7 @@ TEST_CASE("SoftLimiter keeps the output within the unit interval", "[dsp]")
     SoftLimiter limiter;
     limiter.setThreshold(0.9f);
 
-    for (float x : { -1000.0f, -3.0f, -1.0f, 1.0f, 3.0f, 1000.0f })
+    for (float x : {-1000.0f, -3.0f, -1.0f, 1.0f, 3.0f, 1000.0f})
     {
         const float y = limiter.process(x);
         REQUIRE(std::abs(y) <= 1.0f);

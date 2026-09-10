@@ -9,10 +9,10 @@ namespace noisefield::gui
 
 namespace
 {
-const juce::Colour kBackground { 0xff16181c };
-const juce::Colour kBody { 0xffdfe3e8 };
-const juce::Colour kHeading { 0xffffffff };
-const juce::Colour kCode { 0xff8bd5ff };
+const juce::Colour kBackground{0xff16181c};
+const juce::Colour kBody{0xffdfe3e8};
+const juce::Colour kHeading{0xffffffff};
+const juce::Colour kCode{0xff8bd5ff};
 
 juce::Font bodyFont(float size, bool bold)
 {
@@ -26,8 +26,11 @@ juce::Font codeFont(float size)
 }
 
 /// Appends one line of text, interpreting `**bold**` and `` `code` `` spans.
-void appendInline(juce::AttributedString& out, const juce::String& text, float size,
-                  juce::Colour colour, bool boldByDefault)
+void appendInline(juce::AttributedString& out,
+                  const juce::String& text,
+                  float size,
+                  juce::Colour colour,
+                  bool boldByDefault)
 {
     juce::String run;
     bool bold = boldByDefault;
@@ -37,8 +40,7 @@ void appendInline(juce::AttributedString& out, const juce::String& text, float s
     {
         if (run.isNotEmpty())
         {
-            out.append(run, code ? codeFont(size) : bodyFont(size, bold),
-                       code ? kCode : colour);
+            out.append(run, code ? codeFont(size) : bodyFont(size, bold), code ? kCode : colour);
             run.clear();
         }
     };
@@ -48,13 +50,13 @@ void appendInline(juce::AttributedString& out, const juce::String& text, float s
         if (text[i] == '*' && i + 1 < text.length() && text[i + 1] == '*')
         {
             flush();
-            bold = ! bold;
+            bold = !bold;
             i += 2;
         }
         else if (text[i] == '`')
         {
             flush();
-            code = ! code;
+            code = !code;
             i += 1;
         }
         else
@@ -90,7 +92,7 @@ void GuideView::Page::build(float textWidth)
 
         auto heading = [&](int prefixLength, float size)
         {
-            if (! first)
+            if (!first)
                 s.append("\n", bodyFont(8.0f, false), kBody);
             appendInline(s, line.substring(prefixLength), size, kHeading, true);
             s.append("\n", bodyFont(size, true), kHeading);
@@ -133,7 +135,8 @@ void GuideView::Page::paint(juce::Graphics& g)
 {
     g.fillAll(kBackground);
     layout_.draw(g,
-                 juce::Rectangle<float>(margin_, margin_,
+                 juce::Rectangle<float>(margin_,
+                                        margin_,
                                         static_cast<float>(getWidth()) - 2.0f * margin_,
                                         static_cast<float>(getHeight()) - 2.0f * margin_));
 }

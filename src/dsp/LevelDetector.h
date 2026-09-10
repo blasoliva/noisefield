@@ -28,7 +28,7 @@ inline BlockLevel measureBlock(const float* data, int numSamples) noexcept
         sumSquares += static_cast<double>(data[i]) * static_cast<double>(data[i]);
     }
 
-    return { peak, static_cast<float>(std::sqrt(sumSquares / numSamples)) };
+    return {peak, static_cast<float>(std::sqrt(sumSquares / numSamples))};
 }
 
 } // namespace noisefield::dsp

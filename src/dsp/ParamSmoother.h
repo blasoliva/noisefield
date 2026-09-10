@@ -58,9 +58,20 @@ public:
         return current_;
     }
 
-    [[nodiscard]] float current() const noexcept { return current_; }
-    [[nodiscard]] float target() const noexcept { return target_; }
-    [[nodiscard]] bool isSmoothing() const noexcept { return countdown_ > 0; }
+    [[nodiscard]] float current() const noexcept
+    {
+        return current_;
+    }
+
+    [[nodiscard]] float target() const noexcept
+    {
+        return target_;
+    }
+
+    [[nodiscard]] bool isSmoothing() const noexcept
+    {
+        return countdown_ > 0;
+    }
 
 private:
     double sampleRate_ = 44100.0;

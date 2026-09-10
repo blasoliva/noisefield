@@ -18,7 +18,10 @@ public:
         threshold_ = threshold > 0.0f && threshold < 1.0f ? threshold : 0.891f; // ~ -1 dBFS
     }
 
-    [[nodiscard]] float threshold() const noexcept { return threshold_; }
+    [[nodiscard]] float threshold() const noexcept
+    {
+        return threshold_;
+    }
 
     [[nodiscard]] float process(float x) const noexcept
     {

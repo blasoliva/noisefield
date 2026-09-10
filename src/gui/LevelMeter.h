@@ -22,8 +22,8 @@ private:
 
     static float dbToProportion(float decibels);
 
-    float displayRms_ = 0.0f;   // smoothed for readability
-    float displayPeak_ = 0.0f;  // decays slowly
+    float displayRms_ = 0.0f;  // smoothed for readability
+    float displayPeak_ = 0.0f; // decays slowly
     juce::int64 lastUpdateMs_ = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
