@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(Noisefield
-    VERSION 0.1.0
+    VERSION 0.1.0 # x-release-please-version
     DESCRIPTION "Tone generator and noise mixer for Linux"
     LANGUAGES C CXX)
 
