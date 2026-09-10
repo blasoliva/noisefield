@@ -178,11 +178,8 @@ frequency, add white noise, adjust the mix of the two, and hear the result with 
 ## 6. DSP design
 
 - **PRNG:** `xoshiro256++`, seedable per layer (fast, good quality for audio).
-- **White noise:** uniform or Gaussian (Box-Muller) at a controlled level.
-- **Pink noise:** Kellett IIR filter (−3 dB/octave) or Voss-McCartney; validate slope with FFT.
-- **Brown noise:** leaky integrator over white noise, normalized.
-- **Blue / violet noise:** differentiation of pink / white (+3 / +6 dB/octave), normalized.
-- **Grey noise:** white filtered by the approximate inverse of an equal-loudness curve (fixed EQ).
+- **Noise colours:** one white source (`dsp::WhiteNoise`) tinted by `dsp::NoiseTint` — see the
+  table below.
 - **Oscillator:** direct sine (`std::sin` or a polynomial approximation); other shapes with
   PolyBLEP to limit aliasing.
 - **Band filter:** topology-preserving SVF (Zavalishin/TPT) with LP/HP/BP/Notch outputs and an
@@ -192,8 +189,31 @@ frequency, add white noise, adjust the mix of the two, and hear the result with 
 - **Numeric hygiene:** *flush-to-zero* for denormals, TPDF dither when exporting to integer.
 - **Master:** smoothed gain + *soft-knee* limiter to avoid clipping when summing layers.
 
-**Validation:** tests that render each generator and check (a) target RMS level, (b) expected
-spectral slope via FFT within a tolerance.
+### Noise colours (`dsp::NoiseTint`)
+
+| Colour | Slope | Method | Character |
+|---|---|---|---|
+| White | 0 dB/oct | uniform PRNG, pass-through | bright, hissy |
+| Pink | −3 dB/oct | Paul Kellett's refined 7-pole IIR (sum of one-poles) | balanced broadband |
+| Brown | −6 dB/oct | leaky integrator (`y = (y + 0.02·x) / 1.02`) | deep, like heavy rain |
+| Blue | +3 dB/oct | first difference of pink | brighter than white |
+| Violet | +6 dB/oct | first difference of white | very bright, mostly high hiss |
+| Grey | ≈ flat (perceived) | white + low/high shelf boosts, mid left flat — a crude inverse equal-loudness, **not** an ISO 226 curve | roughly equal loudness across the band |
+
+**Level matching:** each colour's gain constant is chosen so its RMS lands within ~1% of the
+white input's RMS (over a 4 M-sample run), so switching colour or moving a mixer fader keeps
+a consistent loudness. Re-derive the constants with the `calibrate_noise` tool after any change to the filters:
+
+```sh
+cmake --build build --target calibrate_noise
+./build/tools/calibrate_noise
+# or standalone:  c++ -O2 -std=c++20 -I src tools/calibrate_noise.cpp -o /tmp/cn && /tmp/cn
+```
+
+**Validation:** `tests/test_noise_tint.cpp` renders each colour and checks (a) RMS within
+[0.8, 1.2]× white, (b) the dark→bright ordering of a first-difference "brightness" proxy
+(`brown < pink < white < blue < violet`), plus determinism and state reset. Other DSP tests
+(oscillator, limiter, smoother, level detector) follow the same render-and-measure pattern.
 
 ## 7. UI/UX
 
