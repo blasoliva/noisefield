@@ -17,7 +17,7 @@ if ! command -v "$clang_format" >/dev/null 2>&1; then
     exit 127
 fi
 
-mapfile -d '' files < <(find src tests -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' \) -print0)
+mapfile -d '' files < <(find src tests tools -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' \) -print0)
 
 if [[ ${#files[@]} -eq 0 ]]; then
     echo "no source files found"

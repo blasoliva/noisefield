@@ -47,6 +47,7 @@ include(FetchJUCE)
 # Targets
 # --------------------------------------------------------------------------------------------
 add_subdirectory(src)
+add_subdirectory(tools)
 
 if(NOISEFIELD_BUILD_TESTS)
     enable_testing()
