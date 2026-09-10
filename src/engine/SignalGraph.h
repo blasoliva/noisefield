@@ -8,6 +8,7 @@
 #include "dsp/WhiteNoise.h"
 #include "engine/EngineParameters.h"
 
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <vector>
@@ -15,13 +16,19 @@
 namespace noisefield::engine
 {
 
-/// The real-time signal path shared by the standalone app and the plugin: one sine oscillator
-/// plus one tinted white-noise source, mixed with smoothed gains into a master bus with an
-/// optional soft limiter, tapped for the meter and the oscilloscope.
+/// The real-time signal path shared by the standalone app and the plugin: a fixed pool of
+/// layer voices (each a sine oscillator or a tinted white-noise source) mixed with smoothed
+/// per-layer gains into a master bus with an optional soft limiter, tapped for the meter and
+/// the oscilloscope.
 ///
 /// Owns the parameter block. Callers write to `parameters()` from any thread (lock-free
 /// atomics) and call `process()` from their audio thread. Everything reachable from
 /// `process()` is allocation-free and lock-free; see docs/realtime-rules.md.
+///
+/// Layers are added/removed by toggling `LayerParameters::active`; the per-layer gain ramp
+/// crossfades them in and out. Re-using a slot for a different layer is an `epoch` bump,
+/// which hard-resets that voice. The mix is a plain sum, so slot order is irrelevant --
+/// display order is the GUI's concern.
 class SignalGraph
 {
 public:
@@ -52,21 +59,29 @@ public:
     }
 
 private:
+    /// The real-time state for one layer slot. Header-only DSP primitives, no allocation.
+    struct LayerVoice
+    {
+        dsp::SineOscillator oscillator;
+        dsp::WhiteNoise noise;
+        dsp::NoiseTint tint;
+        dsp::ParamSmoother gain;
+        std::uint64_t appliedEpoch = 0;
+        std::uint64_t appliedSeed = 1;
+    };
+
+    void prepareVoice(LayerVoice& voice, const LayerParameters& params) noexcept;
+    void renderLayer(LayerVoice& voice, const LayerParameters& params, int frames) noexcept;
     void publishLevel(const float* block, int numSamples) noexcept;
 
     EngineParameters params_;
 
-    dsp::SineOscillator oscillator_;
-    dsp::WhiteNoise noise_;
-    dsp::NoiseTint noiseTint_;
+    std::array<LayerVoice, kMaxLayers> voices_;
     dsp::SoftLimiter limiter_;
-    dsp::ParamSmoother toneGain_;
-    dsp::ParamSmoother noiseGain_;
     dsp::ParamSmoother masterGain_;
     dsp::ScopeBuffer scope_;
 
     std::vector<float> scratch_;
-    std::uint64_t appliedNoiseSeed_ = 1;
 
     std::atomic<double> sampleRate_{0.0};
     std::atomic<float> meterPeak_{0.0f};

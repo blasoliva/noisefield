@@ -22,6 +22,11 @@ juce::NormalisableRange<float> gainDbRange()
 {
     return {dsp::kMinGainDb, 0.0f, 0.1f};
 }
+
+// The plugin drives two fixed engine layer slots (the dynamic layer list is a standalone-app
+// feature for now): slot 0 is the tone oscillator, slot 1 is the noise source.
+constexpr int kToneLayer = 0;
+constexpr int kNoiseLayer = 1;
 } // namespace
 
 juce::AudioProcessorValueTreeState::ParameterLayout NoisefieldAudioProcessor::makeParameterLayout()
@@ -67,8 +72,18 @@ NoisefieldAudioProcessor::NoisefieldAudioProcessor()
     noiseColour_ = apvts_.getRawParameterValue("noiseColour");
     noiseGainDb_ = apvts_.getRawParameterValue("noiseGainDb");
 
+    auto& p = graph_.parameters();
+    p.layer(kToneLayer)
+        .source.store(static_cast<int>(engine::LayerSource::Oscillator), std::memory_order_relaxed);
+    p.layer(kToneLayer).active.store(true, std::memory_order_relaxed);
+    p.layer(kToneLayer).epoch.store(1, std::memory_order_relaxed);
+    p.layer(kNoiseLayer)
+        .source.store(static_cast<int>(engine::LayerSource::Noise), std::memory_order_relaxed);
+    p.layer(kNoiseLayer).active.store(true, std::memory_order_relaxed);
+    p.layer(kNoiseLayer).epoch.store(1, std::memory_order_relaxed);
+
     // A plugin has no transport of its own -- it always produces sound while the host runs it.
-    graph_.parameters().playing.store(true, std::memory_order_relaxed);
+    p.playing.store(true, std::memory_order_relaxed);
 }
 
 void NoisefieldAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
@@ -92,12 +107,17 @@ void NoisefieldAudioProcessor::syncParametersToGraph() noexcept
     p.masterGainDb.store(masterGainDb_->load(), std::memory_order_relaxed);
     p.masterMute.store(masterMute_->load() > 0.5f, std::memory_order_relaxed);
     p.limiterEnabled.store(limiter_->load() > 0.5f, std::memory_order_relaxed);
-    p.toneEnabled.store(toneEnabled_->load() > 0.5f, std::memory_order_relaxed);
-    p.toneFrequencyHz.store(toneFrequencyHz_->load(), std::memory_order_relaxed);
-    p.toneGainDb.store(toneGainDb_->load(), std::memory_order_relaxed);
-    p.noiseEnabled.store(noiseEnabled_->load() > 0.5f, std::memory_order_relaxed);
-    p.noiseColour.store(static_cast<int>(noiseColour_->load() + 0.5f), std::memory_order_relaxed);
-    p.noiseGainDb.store(noiseGainDb_->load(), std::memory_order_relaxed);
+
+    auto& tone = p.layer(kToneLayer);
+    tone.muted.store(toneEnabled_->load() <= 0.5f, std::memory_order_relaxed);
+    tone.frequencyHz.store(toneFrequencyHz_->load(), std::memory_order_relaxed);
+    tone.gainDb.store(toneGainDb_->load(), std::memory_order_relaxed);
+
+    auto& noise = p.layer(kNoiseLayer);
+    noise.muted.store(noiseEnabled_->load() <= 0.5f, std::memory_order_relaxed);
+    noise.noiseColour.store(static_cast<int>(noiseColour_->load() + 0.5f),
+                            std::memory_order_relaxed);
+    noise.gainDb.store(noiseGainDb_->load(), std::memory_order_relaxed);
 }
 
 void NoisefieldAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)

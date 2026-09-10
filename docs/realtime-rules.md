@@ -34,10 +34,12 @@ only ever touches `std` and our own `dsp::` code.
 
 | Concern | Solution |
 |---|---|
-| Controls change a parameter | `std::atomic` field in `EngineParameters`, relaxed load in `process()`. The plugin mirrors its APVTS into it once per block. |
-| Parameter change would click | `dsp::ParamSmoother` per-sample ramp on gains; `SineOscillator` ramps frequency internally |
+| Controls change a parameter | `std::atomic` field in `EngineParameters` (per-layer in `LayerParameters`), relaxed load in `process()`. The plugin mirrors its APVTS into it once per block. |
+| Parameter change would click | `dsp::ParamSmoother` per-sample ramp on per-layer and master gains; `SineOscillator` ramps frequency internally |
+| Add / remove a layer | Writer toggles `LayerParameters::active`; the per-slot gain smoother crossfades it in/out. An inactive slot whose gain has reached 0 and is not smoothing is skipped entirely — no state advanced, no CPU. |
+| Reuse / retype a slot | Writer sets the slot's fields then bumps `LayerParameters::epoch`. `process()` sees the epoch change, hard-resets that voice (frequency/seed/colour immediate, phase 0) and forces its gain smoother to 0 so it fades in and no tail of the previous layer leaks through. |
 | Scratch buffer | `std::vector<float>` sized once in `SignalGraph::prepare()` (non-audio thread), only indexed in `process()`; `process()` clamps `numSamples` to its size defensively |
-| Noise re-seed | writer sets `noiseSeed`; `process()` compares against `appliedNoiseSeed_` and re-seeds in place (no allocation) |
+| Noise re-seed | writer sets a layer's `LayerParameters::seed`; `process()` compares it against that voice's cached `appliedSeed` and re-seeds the layer in place (no allocation) |
 | Meter readout | audio thread does a lock-free `compare_exchange` peak-hold into `std::atomic<float>`; GUI `exchange`s it back to 0 |
 | Oscilloscope | audio thread writes a lock-free SPSC ring (`dsp::ScopeBuffer`); GUI copies the most recent window on a timer |
 | Summing clips | `dsp::SoftLimiter` on the master bus |

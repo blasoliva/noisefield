@@ -110,6 +110,12 @@ Principles:
   `AudioIODeviceCallback` + `AudioDeviceManager` wrapper); the plugin
   (`plugin::NoisefieldAudioProcessor`, VST3/LV2/CLAP) drives the same graph from
   `processBlock`, mirroring its `AudioProcessorValueTreeState` into the parameter block.
+- `SignalGraph` renders a fixed pool of `kMaxLayers` layer voices (oscillator or tinted
+  noise, each with a smoothed gain). Layers are added/removed live by toggling an `active`
+  flag — the per-slot gain ramp crossfades them, idle slots cost nothing, and an `epoch`
+  bump hard-resets a slot that is reused for a different layer. Mixing is a plain sum, so the
+  engine is order-agnostic. As of NF-041 the app and plugin still drive only two fixed slots
+  (tone, noise); the dynamic layer-list GUI is NF-042.
 
 ### 3.1 Data model
 
@@ -120,8 +126,12 @@ JUCE-free) read and write it as a small flat JSON object; `fromJson` tolerates u
 and nested structures so a v1 build can open a future v2 file. Preset files are `.nfp`
 (that JSON) under `~/.config/Noisefield/presets/`, managed by `io::PresetStore`.
 
-**Future (with the M3 engine rework, NF-041):** promote to a **Project** — an ordered list
-of **Layers** + master bus + session settings (timer, fades). A Layer:
+The **engine** side of layers landed in NF-041 (`engine::SignalGraph` renders a pool of layer
+voices — see §3). The **data model** side is still pending: `model::Preset` stays flat until
+the layer-list GUI (NF-042) and project save/open (NF-050) need it.
+
+**Future (with NF-050):** promote to a **Project** — an ordered list of **Layers** + master
+bus + session settings (timer, fades). A Layer:
 
 - `type`: `oscillator` | `noise`
 - Oscillator: `shape` (sine/triangle/square/saw), `frequency`, `finetune`, `phase`
