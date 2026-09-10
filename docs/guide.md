@@ -32,9 +32,17 @@ next time.
   travel. Changes are ramped over about 30 ms so they never click.
 - **Level** — loudness of the tone, in decibels. At the bottom it is fully silent.
 
-### White noise
+### Noise
 
 - **Enabled** — includes the noise in the mix.
+- **Colour** — the spectral tilt of the noise:
+  - **White** — flat, equal energy per hertz; bright and hissy.
+  - **Pink** — −3 dB/octave, equal energy per octave; the "balanced" broadband noise.
+  - **Brown** — −6 dB/octave; deep, like heavy rain or a waterfall.
+  - **Blue** — +3 dB/octave; brighter than white.
+  - **Violet** — +6 dB/octave; very bright, mostly high hiss.
+  - **Grey** — shaped so it sounds roughly equally loud across the spectrum (approximate).
+  All colours are level-matched, so switching colour keeps a similar loudness.
 - **Level** — loudness of the noise, in decibels.
 - **Re-seed** — jumps the noise to a new random starting point. The character is the same;
   use it if you want a different exact stream.

@@ -2,6 +2,7 @@ add_executable(noisefield_tests
     test_build_info.cpp
     test_sine_oscillator.cpp
     test_white_noise.cpp
+    test_noise_tint.cpp
     test_param_smoother.cpp
     test_soft_limiter.cpp
     test_gain.cpp

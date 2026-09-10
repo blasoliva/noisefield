@@ -11,6 +11,13 @@ namespace noisefield::engine
 namespace
 {
 constexpr double kGainRampSeconds = 0.02;
+
+dsp::NoiseColour colourFromIndex(int index) noexcept
+{
+    if (index >= 0 && index < static_cast<int>(dsp::kNoiseColours.size()))
+        return dsp::kNoiseColours[static_cast<size_t>(index)];
+    return dsp::NoiseColour::White;
+}
 } // namespace
 
 AudioEngine::AudioEngine() = default;
@@ -59,6 +66,8 @@ void AudioEngine::prepare(double sampleRate, int maxBlockSize)
 
     appliedNoiseSeed_ = params_.noiseSeed.load(std::memory_order_relaxed);
     noise_.setSeed(appliedNoiseSeed_);
+    noiseTint_.setColour(colourFromIndex(params_.noiseColour.load(std::memory_order_relaxed)));
+    noiseTint_.reset();
 
     for (auto* smoother : {&toneGain_, &noiseGain_, &masterGain_})
     {
@@ -114,12 +123,14 @@ void AudioEngine::audioDeviceIOCallbackWithContext(
         appliedNoiseSeed_ = requestedSeed;
     }
 
+    noiseTint_.setColour(colourFromIndex(params_.noiseColour.load(std::memory_order_relaxed)));
+
     const int frames = std::min(numSamples, static_cast<int>(scratch_.size()));
 
     for (int i = 0; i < frames; ++i)
     {
         const float tone = oscillator_.nextSample() * toneGain_.nextValue();
-        const float hiss = noise_.nextSample() * noiseGain_.nextValue();
+        const float hiss = noiseTint_.process(noise_.nextSample()) * noiseGain_.nextValue();
         float sample = (tone + hiss) * masterGain_.nextValue();
         if (limiterOn)
             sample = limiter_.process(sample);

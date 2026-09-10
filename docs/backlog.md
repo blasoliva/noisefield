@@ -11,7 +11,7 @@ See context and technical rationale in [`plan.md`](plan.md).
 |---|---|---|---|
 | **M1** | Scaffolding and skeleton | The project builds, passes CI, and opens a window | Phase 0 — ✅ done |
 | **M2** | Audible MVP | Generate a frequency + white noise and mix them | Phase 1 — ✅ code done |
-| **M3** | Noisefield | Multi-layer, all noise colors, band filter, presets | Phase 2 |
+| **M3** | Noisefield | Multi-layer, all noise colors, band filter, presets | Phase 2 — 🚧 in progress |
 | **M4** | Tools and distribution | Analysis, recording, timer, modulation, AppImage/Flatpak | Phases 3–4 |
 
 ---
@@ -67,10 +67,12 @@ filter each layer by band, mix with pan/mute/solo, and save/load the project and
 - [ ] **NF-040** (M) `Project` / `Layer` model + JSON serialization with a schema version.
 - [ ] **NF-041** (M) Layer management in the engine: add/remove/reorder without glitches (crossfade).
 - [ ] **NF-042** (M) Layer-list GUI: create, delete, reorder, select; per-layer parameter editing.
-- [ ] **NF-043** (M) Pink noise (Kellett filter) + −3 dB/oct slope test.
-- [ ] **NF-044** (S) Brown noise (leaky integrator) + test.
-- [ ] **NF-045** (S) Blue and violet noise (differentiation) + tests.
-- [ ] **NF-046** (M) Grey noise (inverse equal-loudness EQ) + validation.
+- [x] **NF-043** (M) Pink noise (Kellett filter) — `dsp::NoiseTint`, RMS-matched, spectral-tilt test.
+- [x] **NF-044** (S) Brown noise (leaky integrator) — `dsp::NoiseTint` + test.
+- [x] **NF-045** (S) Blue and violet noise (differentiation) — `dsp::NoiseTint` + tests.
+- [x] **NF-046** (M) Grey noise (approximate inverse equal-loudness shelving) — `dsp::NoiseTint` + test.
+  All 6 colours are selectable per-source in the GUI (Noise → Colour) and level-matched;
+  `test_noise_tint.cpp` checks bounds, RMS match, the dark→bright ordering and determinism.
 - [ ] **NF-047** (M) Per-layer SVF (TPT) band filter: LP/HP/BP/Notch/off modes, smoothed cutoff and Q.
 - [ ] **NF-048** (M) Full mixer: fader, pan, mute, solo per layer + per-layer meters.
 - [ ] **NF-049** (M) Additional waveforms with PolyBLEP (triangle/square/saw) + aliasing test.

@@ -26,6 +26,7 @@ struct EngineParameters
     std::atomic<bool> noiseEnabled{false};
     std::atomic<float> noiseGainDb{-20.0f};
     std::atomic<std::uint64_t> noiseSeed{1};
+    std::atomic<int> noiseColour{0}; // index into dsp::kNoiseColours
 };
 
 /// Snapshot of the master output level, produced by the audio thread and consumed by the

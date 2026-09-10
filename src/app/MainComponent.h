@@ -53,6 +53,7 @@ private:
 
     juce::Label noiseHeading_;
     juce::ToggleButton noiseEnableButton_{"Enabled"};
+    juce::ComboBox noiseColourBox_;
     juce::Slider noiseGainSlider_;
     juce::TextButton reseedButton_{"Re-seed"};
 

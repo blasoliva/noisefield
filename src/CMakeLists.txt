@@ -21,6 +21,7 @@ target_sources(noisefield_dsp INTERFACE
     dsp/Gain.h
     dsp/LevelDetector.h
     dsp/NoiseColour.h
+    dsp/NoiseTint.h
     dsp/ParamSmoother.h
     dsp/SineOscillator.h
     dsp/SoftLimiter.h

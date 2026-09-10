@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dsp/NoiseTint.h"
 #include "dsp/ParamSmoother.h"
 #include "dsp/SineOscillator.h"
 #include "dsp/SoftLimiter.h"
@@ -73,6 +74,7 @@ private:
 
     dsp::SineOscillator oscillator_;
     dsp::WhiteNoise noise_;
+    dsp::NoiseTint noiseTint_;
     dsp::SoftLimiter limiter_;
     dsp::ParamSmoother toneGain_;
     dsp::ParamSmoother noiseGain_;

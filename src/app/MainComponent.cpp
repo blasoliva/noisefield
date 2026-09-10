@@ -2,6 +2,7 @@
 
 #include "core/BuildInfo.h"
 #include "dsp/Constants.h"
+#include "dsp/NoiseColour.h"
 #include "gui/DetachedWindow.h"
 #include "gui/GuideView.h"
 #include "gui/SettingsComponent.h"
@@ -19,6 +20,7 @@ constexpr auto kToneGainKey = "toneGainDb";
 constexpr auto kToneEnabledKey = "toneEnabled";
 constexpr auto kNoiseGainKey = "noiseGainDb";
 constexpr auto kNoiseEnabledKey = "noiseEnabled";
+constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kAudioStateKey = "audioDeviceState";
@@ -98,10 +100,18 @@ MainComponent::MainComponent()
                                   std::memory_order_relaxed);
     };
 
-    styleHeading(noiseHeading_, "White noise");
+    styleHeading(noiseHeading_, "Noise");
     noiseEnableButton_.onClick = [this]
     {
         params().noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
+    };
+
+    for (size_t i = 0; i < dsp::kNoiseColours.size(); ++i)
+        noiseColourBox_.addItem(dsp::noiseColourName(dsp::kNoiseColours[i]),
+                                static_cast<int>(i) + 1);
+    noiseColourBox_.onChange = [this]
+    {
+        params().noiseColour.store(noiseColourBox_.getSelectedId() - 1, std::memory_order_relaxed);
     };
 
     configureGainSlider(noiseGainSlider_);
@@ -147,6 +157,7 @@ MainComponent::MainComponent()
                                                                       &toneGainSlider_,
                                                                       &noiseHeading_,
                                                                       &noiseEnableButton_,
+                                                                      &noiseColourBox_,
                                                                       &noiseGainSlider_,
                                                                       &reseedButton_,
                                                                       &masterHeading_,
@@ -154,7 +165,7 @@ MainComponent::MainComponent()
                                                                       &statusLabel_})
         addAndMakeVisible(c);
 
-    setSize(470, 470);
+    setSize(470, 486);
     startTimerHz(30);
 }
 
@@ -207,6 +218,9 @@ void MainComponent::loadSettings()
     noiseEnableButton_.setToggleState(
         store->getBoolValue(kNoiseEnabledKey, params().noiseEnabled.load()),
         juce::dontSendNotification);
+    noiseColourBox_.setSelectedId(store->getIntValue(kNoiseColourKey, params().noiseColour.load()) +
+                                      1,
+                                  juce::dontSendNotification);
     masterGainSlider_.setValue(store->getDoubleValue(kMasterGainKey, params().masterGainDb.load()),
                                juce::dontSendNotification);
 
@@ -223,6 +237,7 @@ void MainComponent::saveSettings()
     store->setValue(kToneEnabledKey, toneEnableButton_.getToggleState());
     store->setValue(kNoiseGainKey, noiseGainSlider_.getValue());
     store->setValue(kNoiseEnabledKey, noiseEnableButton_.getToggleState());
+    store->setValue(kNoiseColourKey, noiseColourBox_.getSelectedId() - 1);
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
 
@@ -241,6 +256,7 @@ void MainComponent::pushAllParametersToEngine()
     p.toneEnabled.store(toneEnableButton_.getToggleState(), std::memory_order_relaxed);
     p.noiseGainDb.store(static_cast<float>(noiseGainSlider_.getValue()), std::memory_order_relaxed);
     p.noiseEnabled.store(noiseEnableButton_.getToggleState(), std::memory_order_relaxed);
+    p.noiseColour.store(noiseColourBox_.getSelectedId() - 1, std::memory_order_relaxed);
     p.masterGainDb.store(static_cast<float>(masterGainSlider_.getValue()),
                          std::memory_order_relaxed);
     // limiterEnabled is already populated from settings in loadSettings().
@@ -291,8 +307,13 @@ void MainComponent::resized()
     area.removeFromTop(12);
 
     noiseHeading_.setBounds(area.removeFromTop(20));
-    noiseEnableButton_.setBounds(area.removeFromTop(28));
-    area.removeFromTop(4);
+    {
+        auto row = area.removeFromTop(28);
+        noiseEnableButton_.setBounds(row.removeFromLeft(90));
+        row.removeFromLeft(10);
+        noiseColourBox_.setBounds(row.removeFromLeft(150));
+    }
+    area.removeFromTop(6);
     {
         auto row = area.removeFromTop(28);
         reseedButton_.setBounds(row.removeFromRight(90));
