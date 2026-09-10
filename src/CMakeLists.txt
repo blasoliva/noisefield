@@ -43,14 +43,22 @@ target_link_libraries(noisefield_core
     PUBLIC noisefield_dsp
     PRIVATE noisefield_warnings)
 
-# Placeholders for later milestones -- kept so the directories and intent are visible from M1.
-# gui/  -> M3 components (layer list, mixer strip, analyzer view, transport bar)
-# io/   -> M4 recorder, offline exporter, headless CLI
+# --------------------------------------------------------------------------------------------
+# noisefield_engine -- the real-time signal graph, shared by the app and the plugin. Framework
+# -free (no JUCE); INTERFACE so SignalGraph.cpp compiles once into each final artefact.
+# Per-target strict warnings are applied on the source file below.
+# --------------------------------------------------------------------------------------------
+add_library(noisefield_engine INTERFACE)
+target_sources(noisefield_engine INTERFACE
+    engine/SignalGraph.cpp
+    engine/SignalGraph.h
+    engine/EngineParameters.h)
+target_include_directories(noisefield_engine INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(noisefield_engine INTERFACE noisefield_dsp)
 
 # --------------------------------------------------------------------------------------------
-# Noisefield -- the standalone GUI application. This is the single target that compiles the
-# JUCE modules, so JUCE's own warnings must not be forced on here; our sources get the strict
-# flags individually instead.
+# Noisefield -- the standalone GUI application. Compiles the JUCE modules itself, so JUCE's own
+# warnings must not be forced on the whole target; our sources get the strict flags per-file.
 # --------------------------------------------------------------------------------------------
 juce_add_gui_app(Noisefield
     PRODUCT_NAME "Noisefield"
@@ -82,14 +90,13 @@ target_sources(Noisefield PRIVATE
     app/NoisefieldLookAndFeel.h
     app/Presets.h
     engine/AudioEngine.h
-    engine/EngineParameters.h
     gui/DetachedWindow.h
     gui/LevelMeter.h
     gui/Oscilloscope.h
     gui/SettingsComponent.h
     gui/GuideView.h)
 
-set_source_files_properties(${NOISEFIELD_APP_SOURCES}
+set_source_files_properties(${NOISEFIELD_APP_SOURCES} engine/SignalGraph.cpp
     TARGET_DIRECTORY Noisefield
     PROPERTIES COMPILE_OPTIONS "${NOISEFIELD_WARNING_OPTIONS}")
 
@@ -107,11 +114,16 @@ target_compile_definitions(Noisefield PRIVATE
 target_link_libraries(Noisefield PRIVATE
     noisefield_core
     noisefield_assets
-    juce::juce_audio_basics
+    noisefield_engine
     juce::juce_audio_devices
-    juce::juce_audio_formats
     juce::juce_audio_utils
-    juce::juce_dsp
     juce::juce_gui_basics
     juce::juce_gui_extra
     juce::juce_recommended_config_flags)
+
+# --------------------------------------------------------------------------------------------
+# Plugin build (VST3 / LV2). Opt in with -DNOISEFIELD_BUILD_PLUGIN=ON.
+# --------------------------------------------------------------------------------------------
+if(NOISEFIELD_BUILD_PLUGIN)
+    add_subdirectory(plugin)
+endif()

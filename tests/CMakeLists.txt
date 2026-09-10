@@ -7,10 +7,12 @@ add_executable(noisefield_tests
     test_param_smoother.cpp
     test_soft_limiter.cpp
     test_gain.cpp
-    test_level_detector.cpp)
+    test_level_detector.cpp
+    test_signal_graph.cpp)
 
 target_link_libraries(noisefield_tests PRIVATE
     noisefield_core
+    noisefield_engine
     noisefield_warnings
     Catch2::Catch2WithMain)
 

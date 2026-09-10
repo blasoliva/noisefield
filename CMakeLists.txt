@@ -20,6 +20,8 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(NOISEFIELD_BUILD_TESTS "Build the Catch2 test suite" OFF)
+option(NOISEFIELD_BUILD_PLUGIN "Build the VST3/LV2 plugin" OFF)
+option(NOISEFIELD_PLUGIN_CLAP "Also build a CLAP (fetches clap-juce-extensions)" ON)
 option(NOISEFIELD_WERROR "Treat compiler warnings as errors" OFF)
 
 # --------------------------------------------------------------------------------------------

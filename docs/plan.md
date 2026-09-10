@@ -102,10 +102,14 @@ Principles:
 
 - **Audio-thread rule:** no `malloc`/`free`, no locks, no I/O, no exceptions in the audio
   *callback*.
-- GUI→audio communication via lock-free queues and `std::atomic`; audio→GUI via snapshot
-  *FIFOs* for meters/spectrum.
-- Smoothing of every audible parameter (`juce::SmoothedValue`) to avoid clicks.
-- The audio engine is isolated from the GUI from day 1 (eases a future plugin version).
+- GUI→audio communication via `std::atomic` (`engine::EngineParameters`); audio→GUI via a
+  lock-free peak-hold atomic (meter) and an SPSC ring (`dsp::ScopeBuffer`, oscilloscope).
+- Smoothing of every audible parameter (`dsp::ParamSmoother`) to avoid clicks.
+- The whole real-time signal path lives in **`engine::SignalGraph`**, host-agnostic and
+  GUI-free. The standalone app drives it through `engine::AudioEngine` (a thin
+  `AudioIODeviceCallback` + `AudioDeviceManager` wrapper); the plugin
+  (`plugin::NoisefieldAudioProcessor`, VST3/LV2/CLAP) drives the same graph from
+  `processBlock`, mirroring its `AudioProcessorValueTreeState` into the parameter block.
 
 ### 3.1 Data model
 

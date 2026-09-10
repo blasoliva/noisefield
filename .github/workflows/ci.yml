@@ -26,23 +26,31 @@ jobs:
             libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev \
             libgl1-mesa-dev libcurl4-openssl-dev
 
-      - name: Cache fetched dependencies (JUCE, Catch2)
+      - name: Cache fetched dependencies (JUCE, Catch2, CLAP)
         uses: actions/cache@v4
         with:
           path: build/_deps
-          key: deps-${{ runner.os }}-${{ hashFiles('cmake/FetchJUCE.cmake', 'cmake/FetchCatch2.cmake') }}
+          key: deps-${{ runner.os }}-${{ hashFiles('cmake/Fetch*.cmake') }}
 
       - name: Configure
         run: >
           cmake -B build -G Ninja
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DNOISEFIELD_BUILD_TESTS=ON
+          -DNOISEFIELD_BUILD_PLUGIN=ON
 
       - name: Build
         run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: Check plugin artefacts
+        run: |
+          base=build/src/plugin/NoisefieldPlugin_artefacts/RelWithDebInfo
+          test -e "$base/VST3/Noisefield.vst3"
+          test -e "$base/LV2/Noisefield.lv2"
+          test -e "$base/CLAP/Noisefield.clap"
 
   format:
     name: clang-format

@@ -111,7 +111,11 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 
 ## Icebox (post-M4, no milestone)
 
-- [ ] **NF-090** Plugin version LV2 / CLAP / VST3 from the same engine.
+- [x] **NF-090** Plugin: **VST3 + LV2 + CLAP** from the shared `engine::SignalGraph`
+  (`src/plugin/`, `-DNOISEFIELD_BUILD_PLUGIN=ON`). `NoisefieldAudioProcessor` exposes the
+  tone/noise/master params via an APVTS for host automation. Engine was refactored so the
+  standalone `AudioEngine` and the plugin drive the same graph. Follow-up: the plugin uses a
+  generic editor — the custom UI is not shared with it yet.
 - [ ] **NF-091** MIDI input: play the oscillator, map CC to parameters.
 - [x] **NF-092** Use-case presets: 8 built-in presets (tinnitus mask ±tone, focus, sleep,
   deep rain, white wash, 1 kHz test tone, silence) selectable from a **Preset** combo that

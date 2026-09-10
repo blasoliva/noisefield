@@ -1,26 +1,14 @@
 #pragma once
 
-#include "dsp/NoiseTint.h"
-#include "dsp/ParamSmoother.h"
-#include "dsp/ScopeBuffer.h"
-#include "dsp/SineOscillator.h"
-#include "dsp/SoftLimiter.h"
-#include "dsp/WhiteNoise.h"
-#include "engine/EngineParameters.h"
+#include "engine/SignalGraph.h"
 
 #include <juce_audio_devices/juce_audio_devices.h>
-
-#include <atomic>
-#include <vector>
 
 namespace noisefield::engine
 {
 
-/// Owns the audio device and the real-time signal path: one sine oscillator plus one white
-/// noise source, mixed with smoothed gains into a master bus with an optional soft limiter.
-///
-/// Real-time rule for everything reachable from the callback: no allocation, no locks, no
-/// I/O, no exceptions. See docs/realtime-rules.md.
+/// Standalone-app front end for `SignalGraph`: owns the audio device and drives the graph
+/// from the real-time callback. The plugin build uses `SignalGraph` directly instead.
 class AudioEngine final : private juce::AudioIODeviceCallback
 {
 public:
@@ -37,7 +25,7 @@ public:
 
     EngineParameters& parameters() noexcept
     {
-        return params_;
+        return graph_.parameters();
     }
 
     juce::AudioDeviceManager& deviceManager() noexcept
@@ -45,14 +33,14 @@ public:
         return deviceManager_;
     }
 
-    /// Reads the master level and resets the peak hold. Lock-free; call from the GUI thread.
-    MeterSnapshot fetchMeterAndReset() noexcept;
+    MeterSnapshot fetchMeterAndReset() noexcept
+    {
+        return graph_.fetchMeterAndReset();
+    }
 
-    /// Copies the most recent `count` master-bus samples for the oscilloscope. Lock-free;
-    /// call from the GUI thread. `count` must be <= dsp::ScopeBuffer::kCapacity.
     void readScope(float* dst, int count) noexcept
     {
-        scope_.readLatest(dst, count);
+        graph_.readScope(dst, count);
     }
 
     /// Underruns/overruns reported by the device since it opened, or -1 if unsupported.
@@ -60,7 +48,7 @@ public:
 
     [[nodiscard]] double sampleRate() const noexcept
     {
-        return sampleRate_.load(std::memory_order_relaxed);
+        return graph_.sampleRate();
     }
 
 private:
@@ -74,28 +62,8 @@ private:
     void audioDeviceAboutToStart(juce::AudioIODevice* device) override;
     void audioDeviceStopped() override;
 
-    void prepare(double sampleRate, int maxBlockSize);
-    void publishLevel(const float* block, int numSamples) noexcept;
-
     juce::AudioDeviceManager deviceManager_;
-    EngineParameters params_;
-
-    dsp::SineOscillator oscillator_;
-    dsp::WhiteNoise noise_;
-    dsp::NoiseTint noiseTint_;
-    dsp::SoftLimiter limiter_;
-    dsp::ScopeBuffer scope_;
-    dsp::ParamSmoother toneGain_;
-    dsp::ParamSmoother noiseGain_;
-    dsp::ParamSmoother masterGain_;
-
-    std::vector<float> scratch_;
-    std::uint64_t appliedNoiseSeed_ = 1;
-
-    std::atomic<double> sampleRate_{0.0};
-    std::atomic<float> meterPeak_{0.0f};
-    std::atomic<float> meterRms_{0.0f};
-    std::atomic<bool> running_{false};
+    SignalGraph graph_;
 };
 
 } // namespace noisefield::engine

@@ -52,11 +52,30 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
+## Plugin (VST3 / LV2 / CLAP)
+
+```sh
+cmake -B build -G Ninja -DNOISEFIELD_BUILD_PLUGIN=ON
+cmake --build build
+```
+
+Artefacts land in `build/src/plugin/NoisefieldPlugin_artefacts/<config>/`:
+`VST3/Noisefield.vst3`, `LV2/Noisefield.lv2`, `CLAP/Noisefield.clap`. Copy them to your
+plugin folders (`~/.vst3`, `~/.lv2`, `~/.clap`).
+
+The CLAP build fetches `clap-juce-extensions` (with its CLAP SDK submodules) on the first
+configure. Skip it with `-DNOISEFIELD_PLUGIN_CLAP=OFF` if you only want VST3 + LV2.
+
+The plugin currently uses a generic parameter editor; the full custom UI is not shared with
+it yet.
+
 ## Options
 
 | Option | Default | Effect |
 |---|---|---|
 | `NOISEFIELD_BUILD_TESTS` | `OFF` | Build the Catch2 test suite and register it with CTest |
+| `NOISEFIELD_BUILD_PLUGIN` | `OFF` | Build the VST3/LV2/CLAP plugin |
+| `NOISEFIELD_PLUGIN_CLAP` | `ON` | When the plugin is built, also build a CLAP (fetches `clap-juce-extensions`) |
 | `NOISEFIELD_WERROR` | `OFF` | `-Werror` plus `-Wconversion` / `-Wsign-conversion` on our own code |
 | `NOISEFIELD_JUCE_TAG` | `8.0.15` | JUCE git tag to build against |
 | `NOISEFIELD_CATCH2_TAG` | `v3.7.1` | Catch2 git tag (only used when tests are on) |

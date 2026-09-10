@@ -44,6 +44,7 @@ A built-in **Guide** window (also at [`docs/guide.md`](docs/guide.md)) explains 
 - **CMake ≥ 3.22** build
 - Linux audio via **ALSA** (native) and **JACK** (optional at runtime); PipeWire-compatible
 - Tests with **Catch2 v3**
+- Optional **VST3 / LV2 / CLAP** plugin from the same engine (`-DNOISEFIELD_BUILD_PLUGIN=ON`)
 
 ## Building
 
@@ -67,6 +68,10 @@ cmake --build build
 cmake -B build -DNOISEFIELD_BUILD_TESTS=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
+
+# Plugin (VST3 / LV2 / CLAP) -> build/src/plugin/NoisefieldPlugin_artefacts/
+cmake -B build -DNOISEFIELD_BUILD_PLUGIN=ON
+cmake --build build
 ```
 
 CI (GitHub Actions) builds and runs the test suite on Ubuntu and checks `clang-format` on
