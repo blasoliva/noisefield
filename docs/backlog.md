@@ -107,6 +107,23 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 - [ ] **NF-076** (M) User manual in `docs/` and release notes.
 - [ ] **NF-077** (M) Final RT-safety and stability audit (1-hour session with no xruns).
 
+### Distribution — installers and releases
+
+- [ ] **NF-081** (S) **Install rules + FHS layout.** `install(TARGETS Noisefield ...)`, plus
+  `resources/noisefield.desktop` → `/usr/share/applications`, icons →
+  `/usr/share/icons/hicolor/<size>/apps/`, and (behind an option) the plugins →
+  `/usr/lib/{vst3,lv2,clap}`. Prerequisite for NF-082 and NF-071.
+- [ ] **NF-082** (M) **`.deb` package via CPack** (`CPACK_GENERATOR=DEB`): `Release` build,
+  runtime deps declared (`libasound2`, `libfreetype6`, `libfontconfig1`, `libx11-6`,
+  `libgl1`, `libcurl4`), maintainer / description / section. Optional matching `.rpm`
+  (`CPACK_GENERATOR=RPM`) once the pipeline exists. Depends on NF-081.
+- [ ] **NF-083** (M) **Release workflow** (`.github/workflows/release.yml`): on a `v*` tag,
+  `Release` build on the oldest practical Ubuntu (glibc reach), run the AppImage (NF-071)
+  and `.deb` (NF-082) steps plus a plugin `.tar.gz` (VST3/LV2/CLAP), and attach every
+  artefact to the GitHub Release (`softprops/action-gh-release`). Tag version must match
+  `project(VERSION ...)`. Depends on NF-071, NF-082.
+- [ ] **NF-084** (S) `CHANGELOG.md` and per-release notes (feeds NF-076 and NF-083).
+
 ---
 
 ## Icebox (post-M4, no milestone)
@@ -153,3 +170,5 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 - **NF-047** depends on NF-041 (layers in the engine).
 - **NF-060 / NF-061 / NF-062** depend on NF-028 (analysis FIFO infrastructure).
 - **NF-064** depends on NF-063.
+- **NF-081** (install rules) blocks **NF-071** (AppImage) and **NF-082** (.deb);
+  **NF-083** (release workflow) depends on NF-071 and NF-082.
