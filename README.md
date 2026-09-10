@@ -37,6 +37,13 @@ the VST3 / LV2 / CLAP plugins. To build from source instead, see below.
 </p>
 
 <p align="center">
+  <img src="docs/images/preset-menu.png" alt="Noisefield preset menu" width="440"><br>
+  <em>The preset menu: eight factory starting points (tinnitus masks, focus, sleep, rain,
+  white wash, a test tone, silence) above your own saved presets. <strong>Save</strong> stores
+  the current mix as a <code>.nfp</code> file; <strong>Delete</strong> removes a user preset.</em>
+</p>
+
+<p align="center">
   <img src="docs/images/main-scope.png" alt="Noisefield with the oscilloscope expanded" width="440"><br>
   <em>The Scope button expands a master-output oscilloscope in place, aligned to a rising
   zero-crossing; the window resizes to fit.</em>
@@ -96,13 +103,15 @@ every push and pull request.
 | `src/app/` | Application entry point and main window |
 | `src/engine/` | Real-time audio engine, graph, mixer, master bus |
 | `src/dsp/` | Oscillators, noise generators, filters, modulators |
-| `src/model/` | Project/Layer data model and JSON serialization |
+| `src/plugin/` | VST3 / LV2 / CLAP wrapper around the shared engine |
+| `src/model/` | `Preset` sound-state struct and hand-rolled JSON (`PresetJson`) |
 | `src/gui/` | GUI components |
-| `src/io/` | Recorder, exporter, headless CLI |
+| `src/io/` | `PresetStore` — reads/writes user `.nfp` presets |
 | `tests/` | Catch2 tests |
-| `cmake/` | Build helpers (JUCE fetch) |
-| `resources/` | Icons, factory presets, `.desktop` file |
-| `packaging/` | AppImage / Flatpak packaging |
+| `tools/` | Offline helpers (noise-colour calibration) |
+| `cmake/` | Build helpers (JUCE / Catch2 / CLAP fetch) |
+| `resources/` | App icons and the `.desktop` file |
+| `.github/workflows/` | CI (`ci.yml`) and tag-triggered release (`release.yml`) |
 
 ## License
 
