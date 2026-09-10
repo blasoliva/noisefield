@@ -32,7 +32,7 @@ ctest --test-dir build --output-on-failure
 # Strict build (adds -Werror -Wconversion on our code only)
 cmake -B build -DNOISEFIELD_WERROR=ON && cmake --build build
 
-# Formatting (needs clang-format >= 14; CI uses clang-format-18)
+# Formatting  (CI and local both pin clang-format 23.1.0: `pip install "clang-format==23.1.0"`)
 scripts/check-format.sh          # check
 scripts/check-format.sh --fix    # rewrite
 

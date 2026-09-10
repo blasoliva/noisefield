@@ -1,4 +1,4 @@
-# Noisefield C++ style. Requires clang-format >= 14.
+# Noisefield C++ style. CI pins clang-format 23.1.0 (pip install "clang-format==23.1.0").
 ---
 Language: Cpp
 BasedOnStyle: LLVM

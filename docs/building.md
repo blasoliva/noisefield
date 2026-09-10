@@ -64,7 +64,7 @@ ctest --test-dir build --output-on-failure
 ## Formatting and static analysis
 
 ```sh
-# check formatting (needs clang-format >= 14)
+# check formatting (CI pins clang-format 23.1.0: pip install "clang-format==23.1.0")
 scripts/check-format.sh
 scripts/check-format.sh --fix
 

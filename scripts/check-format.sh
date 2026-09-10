@@ -13,7 +13,7 @@ fi
 
 clang_format="${CLANG_FORMAT:-clang-format}"
 if ! command -v "$clang_format" >/dev/null 2>&1; then
-    echo "error: $clang_format not found (set CLANG_FORMAT or install clang-format >= 14)" >&2
+    echo "error: $clang_format not found (set CLANG_FORMAT, or: pip install 'clang-format==23.1.0')" >&2
     exit 127
 fi
 
