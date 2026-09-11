@@ -30,7 +30,7 @@ constexpr auto kSessionDurationKey = "sessionDurationMinutes";
 constexpr auto kSessionFadeInKey = "sessionFadeInSeconds";
 constexpr auto kSessionFadeOutKey = "sessionFadeOutSeconds";
 
-constexpr int kBaseHeight = 640;       // window height with the scope collapsed
+constexpr int kBaseHeight = 674;       // window height with the scope collapsed
 constexpr int kScopeBlockHeight = 116; // extra height when the scope is expanded (100 + gap)
 
 constexpr int kFactoryIdBase = 1; // ComboBox item ids for the factory presets
@@ -699,11 +699,14 @@ void MainComponent::resized()
     area.removeFromTop(16);
 
     toneHeading_.setBounds(area.removeFromTop(20));
+    {
+        auto row = area.removeFromTop(28);
+        toneEnableButton_.setBounds(row.removeFromLeft(90));
+    }
+    area.removeFromTop(6);
     auto toneRow = area.removeFromTop(120);
     frequencySlider_.setBounds(toneRow.removeFromLeft(150));
     toneRow.removeFromLeft(12);
-    toneEnableButton_.setBounds(toneRow.removeFromTop(28));
-    toneRow.removeFromTop(8);
     toneGainSlider_.setBounds(toneRow.removeFromTop(28));
     area.removeFromTop(12);
 
