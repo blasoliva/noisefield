@@ -119,6 +119,14 @@ target_compile_definitions(Noisefield PRIVATE
     JUCE_DISPLAY_SPLASH_SCREEN=0
     $<$<CONFIG:Debug>:JUCE_DEBUG=1>)
 
+if(NOISEFIELD_JACK_INCLUDE_DIR)
+    # NF-073: explicit JACK backend, named after the app so it shows up as "Noisefield" (not
+    # the generic "JUCEJack") in qjackctl / a patchbay.
+    target_compile_definitions(Noisefield PRIVATE
+        JUCE_JACK=1
+        JUCE_JACK_CLIENT_NAME="Noisefield")
+endif()
+
 target_link_libraries(Noisefield PRIVATE
     noisefield_core
     noisefield_assets

@@ -4,6 +4,8 @@
 
 #include <juce_audio_devices/juce_audio_devices.h>
 
+#include <atomic>
+
 namespace noisefield::engine
 {
 
@@ -51,6 +53,18 @@ public:
         return graph_.sampleRate();
     }
 
+    /// True after the device stopped on its own (e.g. the JACK server was killed) rather than
+    /// via `shutdown()`. The caller (GUI thread) polls this and drives `attemptReconnect()`.
+    [[nodiscard]] bool deviceLost() const noexcept
+    {
+        return deviceLost_.load(std::memory_order_relaxed);
+    }
+
+    /// Tries to reopen the last-used audio device (NF-073: JACK server restarts do not
+    /// auto-reconnect otherwise). Safe to call repeatedly; does nothing if not `deviceLost()`.
+    /// Called from the GUI thread, never from the audio callback.
+    void attemptReconnect();
+
 private:
     void
     audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
@@ -61,9 +75,12 @@ private:
                                      const juce::AudioIODeviceCallbackContext& context) override;
     void audioDeviceAboutToStart(juce::AudioIODevice* device) override;
     void audioDeviceStopped() override;
+    void audioDeviceError(const juce::String& errorMessage) override;
 
     juce::AudioDeviceManager deviceManager_;
     SignalGraph graph_;
+    std::atomic<bool> shuttingDown_{false};
+    std::atomic<bool> deviceLost_{false};
 };
 
 } // namespace noisefield::engine

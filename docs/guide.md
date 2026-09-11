@@ -80,16 +80,38 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 
 - **Level** — overall output loudness, applied after the tone and noise are summed.
 
+### Session timer
+
+An optional sleep-timer: play for a set time, then fade out and stop automatically.
+
+- **Duration** — how long the session lasts, in minutes.
+- **Fade in** — how many seconds it takes to rise from silence to your master **Level** when
+  the timer starts.
+- **Fade out** — how many seconds it takes to fall back to silence just before the session
+  ends.
+- **Start Timer** — begins the session: starts playback if it was stopped, fades in (if set),
+  and counts down. The button becomes **Cancel Timer** while running, and the label next to
+  it shows the time left.
+- **Cancel Timer** — stops the countdown early and restores the master **Level** you had set;
+  playback itself keeps running.
+
+When the timer reaches zero it fades out, stops playback, and restores your master **Level**
+for next time. The duration and fade times are remembered between runs.
+
 The status line at the bottom shows the current sample rate, the recent peak level in dBFS,
 and the number of audio dropouts (xruns) since the device opened. The xrun count should stay
-at 0; if it climbs, raise the buffer size in Settings.
+at 0; if it climbs, raise the buffer size in Settings. If the audio device disappears (for
+example the JACK server was stopped), the status line says so and Noisefield keeps trying to
+reopen it every few seconds — no restart needed once it comes back.
 
 ## Settings window
 
 - **Soft limiter** — safety net on the master bus. Below about -1 dBFS it does nothing; above
   that it smoothly compresses peaks so the output never clips. Leave it on unless you
   specifically want the raw signal.
-- **Output** — which sound card or device Noisefield plays through.
+- **Output** — which sound card or device Noisefield plays through. If JACK is running,
+  it appears here as its own device type; Noisefield registers as a "Noisefield" client so
+  it is easy to find in a patchbay like `qjackctl`.
 - **Sample rate** — samples per second, for example 48000. Higher is not audibly better
   here; match what the rest of your system uses.
 - **Audio buffer size** — latency against stability. Smaller is more responsive but more

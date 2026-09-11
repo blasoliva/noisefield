@@ -28,6 +28,16 @@ option(NOISEFIELD_BUILD_PLUGIN "Build the VST3/LV2 plugin" OFF)
 option(NOISEFIELD_PLUGIN_CLAP "Also build a CLAP (fetches clap-juce-extensions)" ON)
 option(NOISEFIELD_WERROR "Treat compiler warnings as errors" OFF)
 
+# Explicit JACK backend (NF-073): only compiled into the standalone app when libjack's headers
+# are available, so an ALSA-only machine still builds fine (see docs/building.md).
+find_path(NOISEFIELD_JACK_INCLUDE_DIR NAMES jack/jack.h)
+if(NOISEFIELD_JACK_INCLUDE_DIR)
+    message(STATUS "Noisefield: libjack headers found -- JACK backend enabled (NF-073)")
+else()
+    message(STATUS "Noisefield: libjack headers not found -- JACK backend disabled "
+                    "(install libjack-jackd2-dev / jack-audio-connection-kit-devel to enable it)")
+endif()
+
 # --------------------------------------------------------------------------------------------
 # Shared warning flags (INTERFACE target applied to our own code, not to JUCE/deps)
 # --------------------------------------------------------------------------------------------

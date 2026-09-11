@@ -7,6 +7,7 @@
 #include "gui/SettingsComponent.h"
 #include "model/PresetJson.h"
 
+#include <algorithm>
 #include <initializer_list>
 #include <memory>
 
@@ -25,8 +26,11 @@ constexpr auto kMasterGainKey = "masterGainDb";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
 constexpr auto kAudioStateKey = "audioDeviceState";
+constexpr auto kSessionDurationKey = "sessionDurationMinutes";
+constexpr auto kSessionFadeInKey = "sessionFadeInSeconds";
+constexpr auto kSessionFadeOutKey = "sessionFadeOutSeconds";
 
-constexpr int kBaseHeight = 512;       // window height with the scope collapsed
+constexpr int kBaseHeight = 640;       // window height with the scope collapsed
 constexpr int kScopeBlockHeight = 116; // extra height when the scope is expanded (100 + gap)
 
 constexpr int kFactoryIdBase = 1; // ComboBox item ids for the factory presets
@@ -216,6 +220,35 @@ MainComponent::MainComponent()
                                     std::memory_order_relaxed);
     };
 
+    styleHeading(sessionHeading_, "Session timer");
+
+    sessionDurationSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
+    sessionDurationSlider_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
+    sessionDurationSlider_.setRange(1.0, 180.0, 1.0);
+    sessionDurationSlider_.setTextValueSuffix(" min");
+
+    sessionFadeInSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
+    sessionFadeInSlider_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 55, 22);
+    sessionFadeInSlider_.setRange(0.0, 60.0, 1.0);
+    sessionFadeInSlider_.setTextValueSuffix(" s in");
+
+    sessionFadeOutSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
+    sessionFadeOutSlider_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 55, 22);
+    sessionFadeOutSlider_.setRange(0.0, 60.0, 1.0);
+    sessionFadeOutSlider_.setTextValueSuffix(" s out");
+
+    sessionStartButton_.setClickingTogglesState(true);
+    sessionStartButton_.onClick = [this]
+    {
+        if (sessionStartButton_.getToggleState())
+            startSessionTimer();
+        else
+            cancelSessionTimer();
+    };
+
+    sessionStatusLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
+    sessionStatusLabel_.setText("Timer off", juce::dontSendNotification);
+
     statusLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
     statusLabel_.setJustificationType(juce::Justification::centredLeft);
 
@@ -248,6 +281,12 @@ MainComponent::MainComponent()
                                                                       &reseedButton_,
                                                                       &masterHeading_,
                                                                       &masterGainSlider_,
+                                                                      &sessionHeading_,
+                                                                      &sessionDurationSlider_,
+                                                                      &sessionFadeInSlider_,
+                                                                      &sessionFadeOutSlider_,
+                                                                      &sessionStartButton_,
+                                                                      &sessionStatusLabel_,
                                                                       &statusLabel_})
         addAndMakeVisible(c);
 
@@ -327,6 +366,13 @@ void MainComponent::loadSettings()
                                   std::memory_order_relaxed);
 
     scopeExpanded_ = store->getBoolValue(kScopeExpandedKey, false);
+
+    sessionDurationSlider_.setValue(store->getDoubleValue(kSessionDurationKey, 30.0),
+                                    juce::dontSendNotification);
+    sessionFadeInSlider_.setValue(store->getDoubleValue(kSessionFadeInKey, 5.0),
+                                  juce::dontSendNotification);
+    sessionFadeOutSlider_.setValue(store->getDoubleValue(kSessionFadeOutKey, 10.0),
+                                   juce::dontSendNotification);
 }
 
 void MainComponent::saveSettings()
@@ -342,6 +388,10 @@ void MainComponent::saveSettings()
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
     store->setValue(kScopeExpandedKey, scopeExpanded_);
+
+    store->setValue(kSessionDurationKey, sessionDurationSlider_.getValue());
+    store->setValue(kSessionFadeInKey, sessionFadeInSlider_.getValue());
+    store->setValue(kSessionFadeOutKey, sessionFadeOutSlider_.getValue());
 
     if (auto stateXml = engine_.deviceManager().createStateXml())
         store->setValue(kAudioStateKey, stateXml.get());
@@ -488,19 +538,124 @@ void MainComponent::pushAllParametersToEngine()
     // limiterEnabled is already populated from settings in loadSettings().
 }
 
+void MainComponent::startSessionTimer()
+{
+    sessionDurationSeconds_ = sessionDurationSlider_.getValue() * 60.0;
+    sessionFadeInSeconds_ = sessionFadeInSlider_.getValue();
+    sessionFadeOutSeconds_ = sessionFadeOutSlider_.getValue();
+    sessionTargetGainDb_ = static_cast<float>(masterGainSlider_.getValue());
+    sessionElapsedSeconds_ = 0.0;
+    sessionRunning_ = true;
+
+    sessionStartButton_.setButtonText("Cancel Timer");
+    sessionDurationSlider_.setEnabled(false);
+    sessionFadeInSlider_.setEnabled(false);
+    sessionFadeOutSlider_.setEnabled(false);
+
+    if (!playButton_.getToggleState())
+        playButton_.setToggleState(true, juce::sendNotification);
+
+    if (sessionFadeInSeconds_ > 0.0)
+        masterGainSlider_.setValue(dsp::kMinGainDb, juce::sendNotification);
+}
+
+void MainComponent::cancelSessionTimer()
+{
+    sessionRunning_ = false;
+    sessionStartButton_.setToggleState(false, juce::dontSendNotification);
+    sessionStartButton_.setButtonText("Start Timer");
+    sessionDurationSlider_.setEnabled(true);
+    sessionFadeInSlider_.setEnabled(true);
+    sessionFadeOutSlider_.setEnabled(true);
+    sessionStatusLabel_.setText("Timer off", juce::dontSendNotification);
+    masterGainSlider_.setValue(sessionTargetGainDb_, juce::sendNotification);
+}
+
+void MainComponent::tickSessionTimer()
+{
+    if (!sessionRunning_)
+        return;
+
+    sessionElapsedSeconds_ += 1.0 / 30.0;
+
+    if (sessionElapsedSeconds_ >= sessionDurationSeconds_)
+    {
+        sessionRunning_ = false;
+        sessionStartButton_.setToggleState(false, juce::dontSendNotification);
+        sessionStartButton_.setButtonText("Start Timer");
+        sessionDurationSlider_.setEnabled(true);
+        sessionFadeInSlider_.setEnabled(true);
+        sessionFadeOutSlider_.setEnabled(true);
+        playButton_.setToggleState(false, juce::sendNotification);
+        masterGainSlider_.setValue(sessionTargetGainDb_, juce::sendNotification);
+        sessionStatusLabel_.setText("Timer finished", juce::dontSendNotification);
+        return;
+    }
+
+    const double fadeOutStart = std::max(0.0, sessionDurationSeconds_ - sessionFadeOutSeconds_);
+    float gainDb = sessionTargetGainDb_;
+
+    if (sessionElapsedSeconds_ < sessionFadeInSeconds_)
+    {
+        const double t = sessionElapsedSeconds_ / std::max(sessionFadeInSeconds_, 0.001);
+        gainDb = dsp::kMinGainDb + static_cast<float>(t) * (sessionTargetGainDb_ - dsp::kMinGainDb);
+    }
+    else if (sessionElapsedSeconds_ >= fadeOutStart && sessionFadeOutSeconds_ > 0.0)
+    {
+        const double remain = std::max(0.0, sessionDurationSeconds_ - sessionElapsedSeconds_);
+        const double t = juce::jlimit(0.0, 1.0, remain / sessionFadeOutSeconds_);
+        gainDb = dsp::kMinGainDb + static_cast<float>(t) * (sessionTargetGainDb_ - dsp::kMinGainDb);
+    }
+
+    masterGainSlider_.setValue(gainDb, juce::sendNotification);
+
+    const int remainingSeconds = static_cast<int>(sessionDurationSeconds_ - sessionElapsedSeconds_);
+    sessionStatusLabel_.setText(
+        juce::String::formatted("%d:%02d left", remainingSeconds / 60, remainingSeconds % 60),
+        juce::dontSendNotification);
+}
+
 void MainComponent::timerCallback()
 {
     const auto level = engine_.fetchMeterAndReset();
     meter_.setLevel(level.peak, level.rms);
 
+    tickSessionTimer();
+
+    // NF-073: the audio device (typically JACK) can disappear and come back at any time; try
+    // to reopen it every ~3s rather than requiring the user to restart the app.
+    if (engine_.deviceLost())
+    {
+        if (reconnectCooldown_ <= 0)
+        {
+            engine_.attemptReconnect();
+            reconnectCooldown_ = 90; // ~3 s at 30 Hz
+        }
+        else
+        {
+            --reconnectCooldown_;
+        }
+    }
+    else
+    {
+        reconnectCooldown_ = 0;
+    }
+
     const auto rate = engine_.sampleRate();
     const auto xruns = engine_.xRunCount();
     const float peakDb = meter_.currentPeakDb();
     juce::String status;
-    status << (rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"));
-    status << "   peak "
-           << (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS";
-    status << "   xruns: " << (xruns < 0 ? juce::String("n/a") : juce::String(xruns));
+    if (engine_.deviceLost())
+    {
+        status << "audio device lost, reconnecting" + uiString("…");
+    }
+    else
+    {
+        status << (rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"));
+        status << "   peak "
+               << (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS";
+        status << "   xruns: " << (xruns < 0 ? juce::String("n/a") : juce::String(xruns));
+    }
     statusLabel_.setText(status, juce::dontSendNotification);
 }
 
@@ -570,6 +725,24 @@ void MainComponent::resized()
 
     masterHeading_.setBounds(area.removeFromTop(20));
     masterGainSlider_.setBounds(area.removeFromTop(28));
+    area.removeFromTop(12);
+
+    sessionHeading_.setBounds(area.removeFromTop(20));
+    sessionDurationSlider_.setBounds(area.removeFromTop(28));
+    area.removeFromTop(6);
+    {
+        auto row = area.removeFromTop(28);
+        sessionFadeInSlider_.setBounds(row.removeFromLeft(row.getWidth() / 2 - 5));
+        row.removeFromLeft(10);
+        sessionFadeOutSlider_.setBounds(row);
+    }
+    area.removeFromTop(6);
+    {
+        auto row = area.removeFromTop(28);
+        sessionStartButton_.setBounds(row.removeFromLeft(110));
+        row.removeFromLeft(10);
+        sessionStatusLabel_.setBounds(row);
+    }
 
     statusLabel_.setBounds(area.removeFromBottom(22));
 }

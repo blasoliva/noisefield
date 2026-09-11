@@ -16,9 +16,10 @@ namespace noisefield::app
 {
 
 /// Root content component: transport, a collapsible oscilloscope, a level meter, a tone
-/// source (frequency + level), a noise source (colour + level) and a master level. The soft
-/// limiter and audio-device settings, and the user guide, live in their own detached windows.
-/// Control values (and the scope's expanded state) persist between runs.
+/// source (frequency + level), a noise source (colour + level), a master level and a session
+/// timer (duration + fade in/out, auto-stop). The soft limiter and audio-device settings, and
+/// the user guide, live in their own detached windows. Control values (and the scope's
+/// expanded state) persist between runs.
 class MainComponent final : public juce::Component, private juce::Timer
 {
 public:
@@ -82,9 +83,29 @@ private:
     juce::Label masterHeading_;
     juce::Slider masterGainSlider_;
 
+    juce::Label sessionHeading_;
+    juce::Slider sessionDurationSlider_;
+    juce::Slider sessionFadeInSlider_;
+    juce::Slider sessionFadeOutSlider_;
+    juce::TextButton sessionStartButton_{"Start Timer"};
+    juce::Label sessionStatusLabel_;
+
     juce::Label statusLabel_;
 
     bool scopeExpanded_ = false;
+
+    bool sessionRunning_ = false;
+    double sessionElapsedSeconds_ = 0.0;
+    double sessionDurationSeconds_ = 0.0;
+    double sessionFadeInSeconds_ = 0.0;
+    double sessionFadeOutSeconds_ = 0.0;
+    float sessionTargetGainDb_ = 0.0f;
+
+    void startSessionTimer();
+    void cancelSessionTimer();
+    void tickSessionTimer();
+
+    int reconnectCooldown_ = 0; // NF-073: ticks left before the next reconnect attempt
 
     std::unique_ptr<juce::DocumentWindow> settingsWindow_;
     std::unique_ptr<juce::DocumentWindow> guideWindow_;
