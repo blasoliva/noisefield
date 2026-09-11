@@ -4,6 +4,20 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.3.0](https://github.com/blasoliva/noisefield/compare/v0.2.1...v0.3.0) (2026-09-11)
+
+
+### Features
+
+* **app:** add a session timer with fade in/out (NF-065) ([37afcd3](https://github.com/blasoliva/noisefield/commit/37afcd30d6d333fbaaccd045e2daea3d4e0594f6))
+* **engine:** add explicit JACK support with auto-reconnect (NF-073) ([b050b62](https://github.com/blasoliva/noisefield/commit/b050b6250c86243bcac5f99c5d15da98c76b917f))
+
+
+### Documentation
+
+* cover the session timer and JACK reconnect in the user manual (NF-076) ([ad90f5c](https://github.com/blasoliva/noisefield/commit/ad90f5c3c189f9261d49bdbfd7c39ebbb912b0a5))
+* trim M3/M4 backlog to what's actually planned, move the rest to icebox ([331ce94](https://github.com/blasoliva/noisefield/commit/331ce945abb10758d06d91a00235d61e075d4299))
+
 ## [0.2.1](https://github.com/blasoliva/noisefield/compare/v0.2.0...v0.2.1) (2026-09-11)
 
 
