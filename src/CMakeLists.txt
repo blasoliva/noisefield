@@ -100,6 +100,7 @@ target_sources(Noisefield PRIVATE
     gui/DetachedWindow.h
     gui/LevelMeter.h
     gui/Oscilloscope.h
+    gui/SectionCard.h
     gui/SettingsComponent.h
     gui/GuideView.h
     io/PresetStore.h)

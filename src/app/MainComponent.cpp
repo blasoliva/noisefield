@@ -25,13 +25,29 @@ constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
+constexpr auto kTimerExpandedKey = "timerExpanded";
 constexpr auto kAudioStateKey = "audioDeviceState";
 constexpr auto kSessionDurationKey = "sessionDurationMinutes";
 constexpr auto kSessionFadeInKey = "sessionFadeInSeconds";
 constexpr auto kSessionFadeOutKey = "sessionFadeOutSeconds";
 
-constexpr int kBaseHeight = 674;       // window height with the scope collapsed
-constexpr int kScopeBlockHeight = 116; // extra height when the scope is expanded (100 + gap)
+// Card layout: consistent padding inside every gui::SectionCard, a gap between cards, and a
+// smaller gap between a card's own rows (header -> first control, or control -> control).
+constexpr int kOuterPad = 18;
+constexpr int kCardPad = 16;
+constexpr int kCardGap = 14;
+constexpr int kRowGap = 8;
+constexpr int kHeadGap = 10;
+
+constexpr int kBaseHeight = 616;       // window height, scope + session timer both collapsed
+constexpr int kScopeBlockHeight = 92;  // extra height when the scope is expanded
+constexpr int kTimerBlockHeight = 178; // extra height when the session timer is expanded
+
+int computeWindowHeight(bool scopeExpanded, bool timerExpanded)
+{
+    return kBaseHeight + (scopeExpanded ? kScopeBlockHeight : 0) +
+           (timerExpanded ? kTimerBlockHeight : 0);
+}
 
 constexpr int kFactoryIdBase = 1; // ComboBox item ids for the factory presets
 constexpr int kUserIdBase = 1000; // ... and the user presets
@@ -106,6 +122,11 @@ MainComponent::MainComponent()
     {
         setScopeExpanded(scopeButton_.getToggleState());
     };
+    timerButton_.setClickingTogglesState(true);
+    timerButton_.onClick = [this]
+    {
+        setTimerExpanded(timerButton_.getToggleState());
+    };
     guideButton_.onClick = [this]
     {
         openGuideWindow();
@@ -155,8 +176,8 @@ MainComponent::MainComponent()
             .muted.store(!toneEnableButton_.getToggleState(), std::memory_order_relaxed);
     };
 
-    frequencySlider_.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    frequencySlider_.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 96, 22);
+    frequencySlider_.setSliderStyle(juce::Slider::LinearHorizontal);
+    frequencySlider_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
     frequencySlider_.setRange(dsp::kMinFrequencyHz, dsp::kMaxFrequencyHz, 0.0);
     frequencySlider_.setSkewFactorFromMidPoint(632.0);
     frequencySlider_.setTextValueSuffix(" Hz");
@@ -213,6 +234,7 @@ MainComponent::MainComponent()
     };
 
     styleHeading(masterHeading_, "Master");
+    masterCard_.setHighlighted(true);
     configureGainSlider(masterGainSlider_);
     masterGainSlider_.onValueChange = [this]
     {
@@ -259,41 +281,59 @@ MainComponent::MainComponent()
     if (const auto error = engine_.initialise(audioState.get()); error.isNotEmpty())
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
-    for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
-                                                                      &masterMuteButton_,
-                                                                      &scopeButton_,
-                                                                      &guideButton_,
-                                                                      &settingsButton_,
-                                                                      &oscilloscope_,
-                                                                      &meter_,
-                                                                      &presetLabel_,
-                                                                      &presetBox_,
-                                                                      &savePresetButton_,
-                                                                      &deletePresetButton_,
-                                                                      &toneHeading_,
-                                                                      &toneEnableButton_,
-                                                                      &frequencySlider_,
-                                                                      &toneGainSlider_,
-                                                                      &noiseHeading_,
-                                                                      &noiseEnableButton_,
-                                                                      &noiseColourBox_,
-                                                                      &noiseGainSlider_,
-                                                                      &reseedButton_,
-                                                                      &masterHeading_,
-                                                                      &masterGainSlider_,
-                                                                      &sessionHeading_,
-                                                                      &sessionDurationSlider_,
-                                                                      &sessionFadeInSlider_,
-                                                                      &sessionFadeOutSlider_,
-                                                                      &sessionStartButton_,
-                                                                      &sessionStatusLabel_,
-                                                                      &statusLabel_})
+    for (juce::Component* c : std::initializer_list<juce::Component*>{
+             &playButton_,
+             &masterMuteButton_,
+             &scopeButton_,
+             &timerButton_,
+             &guideButton_,
+             &settingsButton_,
+             &monitorCard_,
+             &oscilloscope_,
+             &meter_,
+             &statusLabel_,
+             &presetCard_,
+             &presetLabel_,
+             &presetBox_,
+             &savePresetButton_,
+             &deletePresetButton_,
+             &toneCard_,
+             &toneHeading_,
+             &toneEnableButton_,
+             &frequencySlider_,
+             &toneGainSlider_,
+             &noiseCard_,
+             &noiseHeading_,
+             &noiseEnableButton_,
+             &noiseColourBox_,
+             &noiseGainSlider_,
+             &reseedButton_,
+             &masterCard_,
+             &masterHeading_,
+             &masterGainSlider_,
+             &sessionCard_,
+             &sessionHeading_,
+             &sessionDurationSlider_,
+             &sessionFadeInSlider_,
+             &sessionFadeOutSlider_,
+             &sessionStartButton_,
+             &sessionStatusLabel_})
         addAndMakeVisible(c);
 
     oscilloscope_.setVisible(scopeExpanded_);
     scopeButton_.setToggleState(scopeExpanded_, juce::dontSendNotification);
 
-    setSize(480, kBaseHeight + (scopeExpanded_ ? kScopeBlockHeight : 0));
+    timerButton_.setToggleState(timerExpanded_, juce::dontSendNotification);
+    for (juce::Component* c : std::initializer_list<juce::Component*>{&sessionCard_,
+                                                                      &sessionHeading_,
+                                                                      &sessionDurationSlider_,
+                                                                      &sessionFadeInSlider_,
+                                                                      &sessionFadeOutSlider_,
+                                                                      &sessionStartButton_,
+                                                                      &sessionStatusLabel_})
+        c->setVisible(timerExpanded_);
+
+    setSize(480, computeWindowHeight(scopeExpanded_, timerExpanded_));
     startTimerHz(30);
 }
 
@@ -312,7 +352,27 @@ void MainComponent::setScopeExpanded(bool expanded)
     oscilloscope_.setVisible(expanded);
     scopeButton_.setToggleState(expanded, juce::dontSendNotification);
 
-    const int target = kBaseHeight + (expanded ? kScopeBlockHeight : 0);
+    const int target = computeWindowHeight(scopeExpanded_, timerExpanded_);
+    if (auto* window = findParentComponentOfClass<juce::ResizableWindow>())
+        window->setContentComponentSize(getWidth(), target);
+    else
+        setSize(getWidth(), target);
+}
+
+void MainComponent::setTimerExpanded(bool expanded)
+{
+    timerExpanded_ = expanded;
+    timerButton_.setToggleState(expanded, juce::dontSendNotification);
+    for (juce::Component* c : std::initializer_list<juce::Component*>{&sessionCard_,
+                                                                      &sessionHeading_,
+                                                                      &sessionDurationSlider_,
+                                                                      &sessionFadeInSlider_,
+                                                                      &sessionFadeOutSlider_,
+                                                                      &sessionStartButton_,
+                                                                      &sessionStatusLabel_})
+        c->setVisible(expanded);
+
+    const int target = computeWindowHeight(scopeExpanded_, timerExpanded_);
     if (auto* window = findParentComponentOfClass<juce::ResizableWindow>())
         window->setContentComponentSize(getWidth(), target);
     else
@@ -366,6 +426,7 @@ void MainComponent::loadSettings()
                                   std::memory_order_relaxed);
 
     scopeExpanded_ = store->getBoolValue(kScopeExpandedKey, false);
+    timerExpanded_ = store->getBoolValue(kTimerExpandedKey, false);
 
     sessionDurationSlider_.setValue(store->getDoubleValue(kSessionDurationKey, 30.0),
                                     juce::dontSendNotification);
@@ -388,6 +449,7 @@ void MainComponent::saveSettings()
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
     store->setValue(kScopeExpandedKey, scopeExpanded_);
+    store->setValue(kTimerExpandedKey, timerExpanded_);
 
     store->setValue(kSessionDurationKey, sessionDurationSlider_.getValue());
     store->setValue(kSessionFadeInKey, sessionFadeInSlider_.getValue());
@@ -664,90 +726,132 @@ void MainComponent::paint(juce::Graphics& g)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 }
 
+namespace
+{
+/// Carves a card's outer rect off `area` (with the gap already applied before it), sets
+/// `card`'s bounds to it, and returns the padded inner rect the caller lays its own controls
+/// into.
+juce::Rectangle<int> takeCard(juce::Rectangle<int>& area, juce::Component& card, int innerHeight)
+{
+    auto outer = area.removeFromTop(innerHeight + kCardPad * 2);
+    card.setBounds(outer);
+    return outer.reduced(kCardPad);
+}
+
+/// Splits a card's header row into the heading label (left) and its on/off switch (right),
+/// matching the switch size the LookAndFeel draws.
+void layoutCardHeaderWithSwitch(juce::Rectangle<int> row,
+                                juce::Label& heading,
+                                juce::ToggleButton& switchButton)
+{
+    switchButton.setBounds(row.removeFromRight(40).withSizeKeepingCentre(38, 20));
+    heading.setBounds(row);
+}
+} // namespace
+
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(16);
+    auto area = getLocalBounds().reduced(kOuterPad);
 
     auto transport = area.removeFromTop(30);
-    playButton_.setBounds(transport.removeFromLeft(84));
+    playButton_.setBounds(transport.removeFromLeft(80));
     transport.removeFromLeft(8);
-    masterMuteButton_.setBounds(transport.removeFromLeft(84));
-    settingsButton_.setBounds(transport.removeFromRight(84));
+    masterMuteButton_.setBounds(transport.removeFromLeft(80));
+    settingsButton_.setBounds(transport.removeFromRight(80));
     transport.removeFromRight(6);
-    guideButton_.setBounds(transport.removeFromRight(64));
+    guideButton_.setBounds(transport.removeFromRight(56));
     transport.removeFromRight(6);
-    scopeButton_.setBounds(transport.removeFromRight(64));
+    timerButton_.setBounds(transport.removeFromRight(56));
+    transport.removeFromRight(6);
+    scopeButton_.setBounds(transport.removeFromRight(56));
+    area.removeFromTop(kCardGap);
 
-    area.removeFromTop(10);
-    if (scopeExpanded_)
+    // ---- Monitor: oscilloscope (optional) + level meter + device status, one card ----
     {
-        oscilloscope_.setBounds(area.removeFromTop(kScopeBlockHeight - 16));
-        area.removeFromTop(16);
+        const int scopeBlock = scopeExpanded_ ? 84 + kRowGap : 0;
+        auto inner = takeCard(area, monitorCard_, scopeBlock + 16 + kRowGap + 18);
+        if (scopeExpanded_)
+        {
+            oscilloscope_.setBounds(inner.removeFromTop(84));
+            inner.removeFromTop(kRowGap);
+        }
+        meter_.setBounds(inner.removeFromTop(16));
+        inner.removeFromTop(kRowGap);
+        statusLabel_.setBounds(inner.removeFromTop(18));
     }
-    meter_.setBounds(area.removeFromTop(16));
-    area.removeFromTop(16);
+    area.removeFromTop(kCardGap);
 
+    // ---- Preset ----
     {
-        auto row = area.removeFromTop(26);
-        presetLabel_.setBounds(row.removeFromLeft(46));
-        deletePresetButton_.setBounds(row.removeFromRight(60));
-        row.removeFromRight(6);
-        savePresetButton_.setBounds(row.removeFromRight(56));
-        row.removeFromRight(6);
-        presetBox_.setBounds(row);
+        auto inner = takeCard(area, presetCard_, 26);
+        presetLabel_.setBounds(inner.removeFromLeft(46));
+        deletePresetButton_.setBounds(inner.removeFromRight(60));
+        inner.removeFromRight(6);
+        savePresetButton_.setBounds(inner.removeFromRight(56));
+        inner.removeFromRight(6);
+        presetBox_.setBounds(inner);
     }
-    area.removeFromTop(16);
+    area.removeFromTop(kCardGap);
 
-    toneHeading_.setBounds(area.removeFromTop(20));
+    // ---- Tone ----
     {
-        auto row = area.removeFromTop(28);
-        toneEnableButton_.setBounds(row.removeFromLeft(90));
+        auto inner = takeCard(area, toneCard_, 22 + kHeadGap + 28 + kRowGap + 28);
+        layoutCardHeaderWithSwitch(inner.removeFromTop(22), toneHeading_, toneEnableButton_);
+        inner.removeFromTop(kHeadGap);
+        frequencySlider_.setBounds(inner.removeFromTop(28));
+        inner.removeFromTop(kRowGap);
+        toneGainSlider_.setBounds(inner.removeFromTop(28));
     }
-    area.removeFromTop(6);
-    auto toneRow = area.removeFromTop(120);
-    frequencySlider_.setBounds(toneRow.removeFromLeft(150));
-    toneRow.removeFromLeft(12);
-    toneGainSlider_.setBounds(toneRow.removeFromTop(28));
-    area.removeFromTop(12);
+    area.removeFromTop(kCardGap);
 
-    noiseHeading_.setBounds(area.removeFromTop(20));
+    // ---- Noise ----
     {
-        auto row = area.removeFromTop(28);
-        noiseEnableButton_.setBounds(row.removeFromLeft(90));
-        row.removeFromLeft(10);
-        noiseColourBox_.setBounds(row.removeFromLeft(150));
+        auto inner = takeCard(area, noiseCard_, 22 + kHeadGap + 28 + kRowGap + 28);
+        layoutCardHeaderWithSwitch(inner.removeFromTop(22), noiseHeading_, noiseEnableButton_);
+        inner.removeFromTop(kHeadGap);
+        noiseColourBox_.setBounds(inner.removeFromTop(28));
+        inner.removeFromTop(kRowGap);
+        {
+            auto row = inner.removeFromTop(28);
+            reseedButton_.setBounds(row.removeFromRight(90));
+            row.removeFromRight(10);
+            noiseGainSlider_.setBounds(row);
+        }
     }
-    area.removeFromTop(6);
-    {
-        auto row = area.removeFromTop(28);
-        reseedButton_.setBounds(row.removeFromRight(90));
-        row.removeFromRight(10);
-        noiseGainSlider_.setBounds(row);
-    }
-    area.removeFromTop(12);
+    area.removeFromTop(kCardGap);
 
-    masterHeading_.setBounds(area.removeFromTop(20));
-    masterGainSlider_.setBounds(area.removeFromTop(28));
-    area.removeFromTop(12);
-
-    sessionHeading_.setBounds(area.removeFromTop(20));
-    sessionDurationSlider_.setBounds(area.removeFromTop(28));
-    area.removeFromTop(6);
+    // ---- Master ----
     {
-        auto row = area.removeFromTop(28);
-        sessionFadeInSlider_.setBounds(row.removeFromLeft(row.getWidth() / 2 - 5));
-        row.removeFromLeft(10);
-        sessionFadeOutSlider_.setBounds(row);
-    }
-    area.removeFromTop(6);
-    {
-        auto row = area.removeFromTop(28);
-        sessionStartButton_.setBounds(row.removeFromLeft(110));
-        row.removeFromLeft(10);
-        sessionStatusLabel_.setBounds(row);
+        auto inner = takeCard(area, masterCard_, 22 + kHeadGap + 28);
+        masterHeading_.setBounds(inner.removeFromTop(22));
+        inner.removeFromTop(kHeadGap);
+        masterGainSlider_.setBounds(inner.removeFromTop(28));
     }
 
-    statusLabel_.setBounds(area.removeFromBottom(22));
+    // ---- Session timer (collapsible, via the Timer button) ----
+    if (timerExpanded_)
+    {
+        area.removeFromTop(kCardGap);
+        auto inner =
+            takeCard(area, sessionCard_, 22 + kHeadGap + 28 + kRowGap + 28 + kRowGap + 28);
+        sessionHeading_.setBounds(inner.removeFromTop(22));
+        inner.removeFromTop(kHeadGap);
+        sessionDurationSlider_.setBounds(inner.removeFromTop(28));
+        inner.removeFromTop(kRowGap);
+        {
+            auto row = inner.removeFromTop(28);
+            sessionFadeInSlider_.setBounds(row.removeFromLeft(row.getWidth() / 2 - 5));
+            row.removeFromLeft(10);
+            sessionFadeOutSlider_.setBounds(row);
+        }
+        inner.removeFromTop(kRowGap);
+        {
+            auto row = inner.removeFromTop(28);
+            sessionStartButton_.setBounds(row.removeFromLeft(110));
+            row.removeFromLeft(10);
+            sessionStatusLabel_.setBounds(row);
+        }
+    }
 }
 
 } // namespace noisefield::app
