@@ -4,6 +4,30 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.4.0](https://github.com/blasoliva/noisefield/compare/v0.3.0...v0.4.0) (2026-09-11)
+
+
+### Features
+
+* **app:** draw icons for the Scope/Timer/Guide/Settings buttons ([c36931c](https://github.com/blasoliva/noisefield/commit/c36931cb8f4abb58337a3f5fbe3aa036cb41d2f6))
+* **app:** group the main window into cards, drop the frequency knob ([db33dd1](https://github.com/blasoliva/noisefield/commit/db33dd108913bcec9dbaa27b55e1453e38a32a03))
+* card-based redesign of the main window ([7cec2bf](https://github.com/blasoliva/noisefield/commit/7cec2bf8b1a98c794768b342456d875788cf76c4))
+
+
+### Bug Fixes
+
+* **app:** active/hover states for transport buttons, drop Master highlight ([7c60bba](https://github.com/blasoliva/noisefield/commit/7c60bba5958c208072e85124df5f35ea2d483592))
+* **app:** align Tone's Enabled checkbox under its heading like Noise's ([2cb7d72](https://github.com/blasoliva/noisefield/commit/2cb7d72b5fe8ec6c55ad4e883be8f89e7e02a720))
+* **app:** give LinearHorizontal sliders a fixed-width track ([e50d679](https://github.com/blasoliva/noisefield/commit/e50d6795654047ca6a23542b98456cd74b9491ea))
+* **app:** spread the Monitor card's status row left/centre/right ([22a84ba](https://github.com/blasoliva/noisefield/commit/22a84ba8d830b67c42045e5d0a02a9d886291420))
+* **ci:** grant issues:write so release-please can label its PR ([b1b749b](https://github.com/blasoliva/noisefield/commit/b1b749b522f69fb3d0568cdbfec2e7236c4f8d7a))
+* **ci:** grant issues:write so release-please can label its PR ([3a957f7](https://github.com/blasoliva/noisefield/commit/3a957f734876652f58bede4dd28f193fec302ab6))
+
+
+### Documentation
+
+* refresh screenshots and wording for the card-based redesign ([56bd237](https://github.com/blasoliva/noisefield/commit/56bd237554be50189b42c51c2cec4272aace33fd))
+
 ## [0.3.0](https://github.com/blasoliva/noisefield/compare/v0.2.1...v0.3.0) (2026-09-11)
 
 
