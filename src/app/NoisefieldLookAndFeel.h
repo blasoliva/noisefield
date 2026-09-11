@@ -81,7 +81,8 @@ public:
         constexpr float kTrackH = 4.0f;
 
         g.setColour(juce::Colour(0xff232830));
-        g.fillRoundedRectangle(left, trackY - kTrackH * 0.5f, right - left, kTrackH, kTrackH * 0.5f);
+        g.fillRoundedRectangle(
+            left, trackY - kTrackH * 0.5f, right - left, kTrackH, kTrackH * 0.5f);
 
         g.setColour(colour);
         g.fillRoundedRectangle(

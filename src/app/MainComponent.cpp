@@ -297,46 +297,45 @@ MainComponent::MainComponent()
     if (const auto error = engine_.initialise(audioState.get()); error.isNotEmpty())
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
-    for (juce::Component* c : std::initializer_list<juce::Component*>{
-             &playButton_,
-             &masterMuteButton_,
-             &scopeButton_,
-             &timerButton_,
-             &guideButton_,
-             &settingsButton_,
-             &monitorCard_,
-             &oscilloscope_,
-             &meter_,
-             &statusLabel_,
-             &rateLabel_,
-             &peakLabel_,
-             &xrunsLabel_,
-             &presetCard_,
-             &presetLabel_,
-             &presetBox_,
-             &savePresetButton_,
-             &deletePresetButton_,
-             &toneCard_,
-             &toneHeading_,
-             &toneEnableButton_,
-             &frequencySlider_,
-             &toneGainSlider_,
-             &noiseCard_,
-             &noiseHeading_,
-             &noiseEnableButton_,
-             &noiseColourBox_,
-             &noiseGainSlider_,
-             &reseedButton_,
-             &masterCard_,
-             &masterHeading_,
-             &masterGainSlider_,
-             &sessionCard_,
-             &sessionHeading_,
-             &sessionDurationSlider_,
-             &sessionFadeInSlider_,
-             &sessionFadeOutSlider_,
-             &sessionStartButton_,
-             &sessionStatusLabel_})
+    for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
+                                                                      &masterMuteButton_,
+                                                                      &scopeButton_,
+                                                                      &timerButton_,
+                                                                      &guideButton_,
+                                                                      &settingsButton_,
+                                                                      &monitorCard_,
+                                                                      &oscilloscope_,
+                                                                      &meter_,
+                                                                      &statusLabel_,
+                                                                      &rateLabel_,
+                                                                      &peakLabel_,
+                                                                      &xrunsLabel_,
+                                                                      &presetCard_,
+                                                                      &presetLabel_,
+                                                                      &presetBox_,
+                                                                      &savePresetButton_,
+                                                                      &deletePresetButton_,
+                                                                      &toneCard_,
+                                                                      &toneHeading_,
+                                                                      &toneEnableButton_,
+                                                                      &frequencySlider_,
+                                                                      &toneGainSlider_,
+                                                                      &noiseCard_,
+                                                                      &noiseHeading_,
+                                                                      &noiseEnableButton_,
+                                                                      &noiseColourBox_,
+                                                                      &noiseGainSlider_,
+                                                                      &reseedButton_,
+                                                                      &masterCard_,
+                                                                      &masterHeading_,
+                                                                      &masterGainSlider_,
+                                                                      &sessionCard_,
+                                                                      &sessionHeading_,
+                                                                      &sessionDurationSlider_,
+                                                                      &sessionFadeInSlider_,
+                                                                      &sessionFadeOutSlider_,
+                                                                      &sessionStartButton_,
+                                                                      &sessionStatusLabel_})
         addAndMakeVisible(c);
 
     oscilloscope_.setVisible(scopeExpanded_);
@@ -863,8 +862,7 @@ void MainComponent::resized()
     if (timerExpanded_)
     {
         area.removeFromTop(kCardGap);
-        auto inner =
-            takeCard(area, sessionCard_, 22 + kHeadGap + 28 + kRowGap + 28 + kRowGap + 28);
+        auto inner = takeCard(area, sessionCard_, 22 + kHeadGap + 28 + kRowGap + 28 + kRowGap + 28);
         sessionHeading_.setBounds(inner.removeFromTop(22));
         inner.removeFromTop(kHeadGap);
         sessionDurationSlider_.setBounds(inner.removeFromTop(28));

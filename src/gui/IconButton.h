@@ -84,8 +84,8 @@ inline void scope(juce::Graphics& g, juce::Rectangle<float> bounds)
     p.lineTo(lerp(bounds, 0.62f, 0.88f));
     p.lineTo(lerp(bounds, 0.77f, 0.5f));
     p.lineTo(lerp(bounds, 1.0f, 0.5f));
-    g.strokePath(p, juce::PathStrokeType(1.6f, juce::PathStrokeType::curved,
-                                         juce::PathStrokeType::rounded));
+    g.strokePath(
+        p, juce::PathStrokeType(1.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 
 inline void timer(juce::Graphics& g, juce::Rectangle<float> bounds)
@@ -99,16 +99,17 @@ inline void timer(juce::Graphics& g, juce::Rectangle<float> bounds)
     hands.lineTo(centre.x, centre.y - radius * 0.62f);
     hands.startNewSubPath(centre);
     hands.lineTo(centre.x + radius * 0.5f, centre.y);
-    g.strokePath(hands, juce::PathStrokeType(1.6f, juce::PathStrokeType::curved,
-                                              juce::PathStrokeType::rounded));
+    g.strokePath(
+        hands,
+        juce::PathStrokeType(1.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 
 inline void guide(juce::Graphics& g, juce::Rectangle<float> bounds)
 {
     const float gap = bounds.getWidth() * 0.045f;
     const auto left =
-        juce::Rectangle<float>(bounds.getX(), bounds.getY(), bounds.getWidth() * 0.5f - gap,
-                               bounds.getHeight())
+        juce::Rectangle<float>(
+            bounds.getX(), bounds.getY(), bounds.getWidth() * 0.5f - gap, bounds.getHeight())
             .withTop(bounds.getY() + bounds.getHeight() * 0.08f)
             .withBottom(bounds.getBottom() - bounds.getHeight() * 0.05f);
     const auto right = left.withX(bounds.getCentreX() + gap);

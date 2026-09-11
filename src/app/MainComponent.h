@@ -69,9 +69,9 @@ private:
     gui::SectionCard monitorCard_;
     gui::Oscilloscope oscilloscope_;
     gui::LevelMeter meter_;
-    juce::Label rateLabel_;   // "44100 Hz", left
-    juce::Label peakLabel_;   // "peak -x.x dBFS", centred
-    juce::Label xrunsLabel_;  // "xruns: n", right
+    juce::Label rateLabel_;  // "44100 Hz", left
+    juce::Label peakLabel_;  // "peak -x.x dBFS", centred
+    juce::Label xrunsLabel_; // "xruns: n", right
 
     gui::SectionCard presetCard_;
     juce::Label presetLabel_;
