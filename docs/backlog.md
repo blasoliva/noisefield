@@ -90,7 +90,9 @@ JACK support; installable AppImage; user manual.
 - [x] **NF-061** (S) Oscilloscope with rising-zero-crossing trigger, collapsible in the main
   window (Scope button; window grows/shrinks to fit; state persists). Engine feeds it via
   `dsp::ScopeBuffer` (lock-free SPSC ring); `test_scope_buffer.cpp`.
-- [ ] **NF-065** (M) Session timer: duration, fade-in/out, automatic stop.
+- [x] **NF-065** (M) Session timer: duration, fade-in/out, automatic stop. GUI-only (no engine
+  change): `MainComponent` fades `masterGainDb` on its existing 30 Hz timer and stops
+  playback when the countdown ends; settings persist.
 - [x] **NF-071** (M) AppImage packaging with `linuxdeploy` (via the release workflow):
   `cmake --install --component noisefield` → `AppDir` → `linuxdeploy --output appimage` →
   `Noisefield-<version>-x86_64.AppImage`. Verified locally (builds, runs). (`.desktop` and
