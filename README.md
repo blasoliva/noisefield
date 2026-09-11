@@ -9,9 +9,10 @@ A native Linux desktop app to generate tones across a frequency range and mix di
 types of noise (white, pink, brown, blue, violet, grey) into layered sound fields. The
 [user guide](docs/guide.md) explains what each control does.
 
-I have tinnitus. Playing certain tones and noise blends through this app relieves the
-sensation for me at times — that is why it exists. This app is a personal tool, not a
-medical device.
+I have tinnitus, and playing certain tones and noise blends through this app relieves the
+sensation for me at times — that is why it exists.
+
+**Disclaimer: this is a personal tool, not a medical device.**
 
 Noisefield is built 100% AI-assisted.
 
