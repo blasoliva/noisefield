@@ -23,20 +23,38 @@ public:
                      bool shouldDrawButtonAsHighlighted,
                      bool shouldDrawButtonAsDown) override
     {
-        auto& lf = getLookAndFeel();
-        lf.drawButtonBackground(
-            g,
-            *this,
-            findColour(getToggleState() ? juce::TextButton::buttonOnColourId
-                                        : juce::TextButton::buttonColourId),
-            shouldDrawButtonAsHighlighted,
-            shouldDrawButtonAsDown);
+        const auto kAccent = juce::Colour(0xff5fc7ea);
+        const bool on = getToggleState();
 
-        const auto bounds = getLocalBounds().toFloat();
+        auto fill = on ? kAccent.withAlpha(0.18f) : juce::Colour(0xff232830);
+        auto border = on ? kAccent : juce::Colour(0xff2b2f38);
+        auto iconColour = on ? kAccent : juce::Colour(0xffb9c0c8);
+
+        if (shouldDrawButtonAsDown)
+        {
+            fill = fill.brighter(0.15f);
+            if (!on)
+                border = kAccent.withAlpha(0.7f);
+        }
+        else if (shouldDrawButtonAsHighlighted)
+        {
+            fill = fill.brighter(0.08f);
+            if (!on)
+            {
+                border = kAccent.withAlpha(0.5f);
+                iconColour = iconColour.brighter(0.4f);
+            }
+        }
+
+        const auto bounds = getLocalBounds().toFloat().reduced(0.5f);
+        g.setColour(fill);
+        g.fillRoundedRectangle(bounds, 7.0f);
+        g.setColour(border);
+        g.drawRoundedRectangle(bounds, 7.0f, 1.2f);
+
         const float size = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.44f;
         const auto iconBounds = bounds.withSizeKeepingCentre(size, size);
-
-        g.setColour(getToggleState() ? juce::Colour(0xff5fc7ea) : juce::Colour(0xffb9c0c8));
+        g.setColour(iconColour);
         if (drawIcon_)
             drawIcon_(g, iconBounds);
     }

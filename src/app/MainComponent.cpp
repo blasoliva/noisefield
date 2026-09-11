@@ -117,6 +117,13 @@ MainComponent::MainComponent()
         masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
     };
 
+    // Toggled on, both read as "active": accent background, dark text so it stays legible.
+    for (auto* b : {&playButton_, &masterMuteButton_})
+    {
+        b->setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff5fc7ea));
+        b->setColour(juce::TextButton::textColourOnId, juce::Colour(0xff14161a));
+    }
+
     scopeButton_.setTooltip("Oscilloscope");
     scopeButton_.setClickingTogglesState(true);
     scopeButton_.onClick = [this]
@@ -238,7 +245,6 @@ MainComponent::MainComponent()
     };
 
     styleHeading(masterHeading_, "Master");
-    masterCard_.setHighlighted(true);
     configureGainSlider(masterGainSlider_);
     masterGainSlider_.onValueChange = [this]
     {
