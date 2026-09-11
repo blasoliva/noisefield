@@ -274,6 +274,12 @@ MainComponent::MainComponent()
     statusLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
     statusLabel_.setJustificationType(juce::Justification::centredLeft);
 
+    for (auto* label : {&rateLabel_, &peakLabel_, &xrunsLabel_})
+        label->setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
+    rateLabel_.setJustificationType(juce::Justification::centredLeft);
+    peakLabel_.setJustificationType(juce::Justification::centred);
+    xrunsLabel_.setJustificationType(juce::Justification::centredRight);
+
     loadSettings();
     pushAllParametersToEngine();
 
@@ -292,6 +298,9 @@ MainComponent::MainComponent()
              &oscilloscope_,
              &meter_,
              &statusLabel_,
+             &rateLabel_,
+             &peakLabel_,
+             &xrunsLabel_,
              &presetCard_,
              &presetLabel_,
              &presetBox_,
@@ -706,19 +715,26 @@ void MainComponent::timerCallback()
     const auto rate = engine_.sampleRate();
     const auto xruns = engine_.xRunCount();
     const float peakDb = meter_.currentPeakDb();
-    juce::String status;
-    if (engine_.deviceLost())
+    const bool lost = engine_.deviceLost();
+
+    statusLabel_.setVisible(lost);
+    for (auto* label : {&rateLabel_, &peakLabel_, &xrunsLabel_})
+        label->setVisible(!lost);
+
+    if (lost)
     {
-        status << "audio device lost, reconnecting" + uiString("…");
+        statusLabel_.setText("audio device lost, reconnecting" + uiString("…"),
+                             juce::dontSendNotification);
+        return;
     }
-    else
-    {
-        status << (rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"));
-        status << "   peak "
-               << (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS";
-        status << "   xruns: " << (xruns < 0 ? juce::String("n/a") : juce::String(xruns));
-    }
-    statusLabel_.setText(status, juce::dontSendNotification);
+
+    rateLabel_.setText(rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"),
+                       juce::dontSendNotification);
+    peakLabel_.setText(
+        "peak " + (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS",
+        juce::dontSendNotification);
+    xrunsLabel_.setText("xruns: " + (xruns < 0 ? juce::String("n/a") : juce::String(xruns)),
+                        juce::dontSendNotification);
 }
 
 void MainComponent::paint(juce::Graphics& g)
@@ -777,7 +793,12 @@ void MainComponent::resized()
         }
         meter_.setBounds(inner.removeFromTop(16));
         inner.removeFromTop(kRowGap);
-        statusLabel_.setBounds(inner.removeFromTop(18));
+        auto statusRow = inner.removeFromTop(18);
+        statusLabel_.setBounds(statusRow);
+        const int third = statusRow.getWidth() / 3;
+        rateLabel_.setBounds(statusRow.removeFromLeft(third));
+        xrunsLabel_.setBounds(statusRow.removeFromRight(third));
+        peakLabel_.setBounds(statusRow);
     }
     area.removeFromTop(kCardGap);
 
