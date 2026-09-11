@@ -155,7 +155,7 @@ Control values, the scope's expanded state and the audio-device state persist vi
   never bump. Scope where it helps (`feat(engine):`, `fix(settings):`). See `docs/releasing.md`.
 - **Do not `git push` without explicit confirmation.** Local commits are fine.
 - Default branch is `main`; it requires a PR (direct pushes are blocked). Sign commits with
-  the GPG key whose UID is `blasoliva@gmail.com` (repo-local `user.signingkey`).
+  the GPG key whose UID is `you@example.com` (repo-local `user.signingkey`).
 
 ## Known issues / constraints
 
