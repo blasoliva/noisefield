@@ -2,6 +2,7 @@
 
 #include "app/Presets.h"
 #include "engine/AudioEngine.h"
+#include "gui/IconButton.h"
 #include "gui/LevelMeter.h"
 #include "gui/Oscilloscope.h"
 #include "gui/SectionCard.h"
@@ -59,10 +60,11 @@ private:
 
     juce::TextButton playButton_{"Play"};
     juce::TextButton masterMuteButton_{"Mute"};
-    juce::TextButton scopeButton_{"Scope"};
-    juce::TextButton timerButton_{"Timer"};
-    juce::TextButton guideButton_{"Guide"};
-    juce::TextButton settingsButton_{"Settings"};
+    gui::IconButton scopeButton_{gui::icons::scope};
+    gui::IconButton timerButton_{gui::icons::timer};
+    gui::IconButton guideButton_{gui::icons::guide};
+    gui::IconButton settingsButton_{gui::icons::settings};
+    juce::TooltipWindow tooltipWindow_{nullptr, 700};
 
     gui::SectionCard monitorCard_;
     gui::Oscilloscope oscilloscope_;

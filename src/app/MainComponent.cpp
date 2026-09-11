@@ -117,20 +117,24 @@ MainComponent::MainComponent()
         masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
     };
 
+    scopeButton_.setTooltip("Oscilloscope");
     scopeButton_.setClickingTogglesState(true);
     scopeButton_.onClick = [this]
     {
         setScopeExpanded(scopeButton_.getToggleState());
     };
+    timerButton_.setTooltip("Session timer");
     timerButton_.setClickingTogglesState(true);
     timerButton_.onClick = [this]
     {
         setTimerExpanded(timerButton_.getToggleState());
     };
+    guideButton_.setTooltip("Guide");
     guideButton_.onClick = [this]
     {
         openGuideWindow();
     };
+    settingsButton_.setTooltip("Settings");
     settingsButton_.onClick = [this]
     {
         openSettingsWindow();
@@ -773,13 +777,13 @@ void MainComponent::resized()
     playButton_.setBounds(transport.removeFromLeft(80));
     transport.removeFromLeft(8);
     masterMuteButton_.setBounds(transport.removeFromLeft(80));
-    settingsButton_.setBounds(transport.removeFromRight(80));
+    settingsButton_.setBounds(transport.removeFromRight(40));
     transport.removeFromRight(6);
-    guideButton_.setBounds(transport.removeFromRight(56));
+    guideButton_.setBounds(transport.removeFromRight(40));
     transport.removeFromRight(6);
-    timerButton_.setBounds(transport.removeFromRight(56));
+    timerButton_.setBounds(transport.removeFromRight(40));
     transport.removeFromRight(6);
-    scopeButton_.setBounds(transport.removeFromRight(56));
+    scopeButton_.setBounds(transport.removeFromRight(40));
     area.removeFromTop(kCardGap);
 
     // ---- Monitor: oscilloscope (optional) + level meter + device status, one card ----
