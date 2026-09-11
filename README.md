@@ -32,9 +32,9 @@ the VST3 / LV2 / CLAP plugins. To build from source instead, see below.
 
 <p align="center">
   <img src="docs/images/main.png" alt="Noisefield main window" width="440"><br>
-  <em>Main window: transport, the preset menu (factory + saved presets), the tone source
-  (frequency knob with Hz entry, and level), the noise source (colour and level), the master
-  level, and the dBFS output meter.</em>
+  <em>Main window: transport with the level meter and device status, the preset menu
+  (factory + saved presets), and a card each for the tone source (frequency and level), the
+  noise source (colour and level), and the master level.</em>
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@ the VST3 / LV2 / CLAP plugins. To build from source instead, see below.
 
 <p align="center">
   <img src="docs/images/main-scope.png" alt="Noisefield with the oscilloscope expanded" width="440"><br>
-  <em>The Scope button expands a master-output oscilloscope in place, aligned to a rising
+  <em>The waveform icon expands a master-output oscilloscope in place, aligned to a rising
   zero-crossing; the window resizes to fit.</em>
 </p>
 

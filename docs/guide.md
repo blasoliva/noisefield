@@ -56,8 +56,8 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 ### Tone
 
 - **Enabled** — includes the tone in the mix.
-- **Frequency** — pitch of the tone, 20 Hz to 20 kHz. Drag the knob, or double-click the
-  number to type an exact value in Hz. The knob is logarithmic, so low frequencies get more
+- **Frequency** — pitch of the tone, 20 Hz to 20 kHz. Drag the slider, or double-click the
+  number to type an exact value in Hz. The slider is logarithmic, so low frequencies get more
   travel. Changes are ramped over about 30 ms so they never click.
 - **Level** — loudness of the tone, in decibels. At the bottom it is fully silent.
 
@@ -82,7 +82,9 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 
 ### Session timer
 
-An optional sleep-timer: play for a set time, then fade out and stop automatically.
+An optional sleep-timer: play for a set time, then fade out and stop automatically. The
+clock icon in the transport bar shows or hides this section; like the oscilloscope, the
+window grows and shrinks to fit and the state is remembered between runs.
 
 - **Duration** — how long the session lasts, in minutes.
 - **Fade in** — how many seconds it takes to rise from silence to your master **Level** when
