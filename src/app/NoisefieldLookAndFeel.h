@@ -48,6 +48,51 @@ public:
         g.setColour(on ? accent : juce::Colour(0xff6a6f78));
         g.fillEllipse(thumbX, track.getY() + 3.0f, thumbD, thumbD);
     }
+
+    /// The stock LookAndFeel_V4 linear slider insets its track by the thumb radius, so the
+    /// usable travel (and how "full" the track looks) shifts with the slider's own width and
+    /// range -- most visible on `LinearHorizontal` sliders back to back at different widths.
+    /// Draw a track that always spans the full [x, x+width) given to us, filled from the left
+    /// up to the thumb, with a plain circular thumb -- independent of slider position.
+    void drawLinearSlider(juce::Graphics& g,
+                          int x,
+                          int y,
+                          int width,
+                          int height,
+                          float sliderPos,
+                          float minSliderPos,
+                          float maxSliderPos,
+                          const juce::Slider::SliderStyle style,
+                          juce::Slider& slider) override
+    {
+        if (style != juce::Slider::LinearHorizontal)
+        {
+            LookAndFeel_V4::drawLinearSlider(
+                g, x, y, width, height, sliderPos, minSliderPos, maxSliderPos, style, slider);
+            return;
+        }
+
+        const auto accent = juce::Colour(0xff5fc7ea);
+        const auto colour = slider.isEnabled() ? accent : juce::Colour(0xff4a4f58);
+
+        const float left = static_cast<float>(x);
+        const float right = static_cast<float>(x + width);
+        const float trackY = static_cast<float>(y) + static_cast<float>(height) * 0.5f;
+        constexpr float kTrackH = 4.0f;
+
+        g.setColour(juce::Colour(0xff232830));
+        g.fillRoundedRectangle(left, trackY - kTrackH * 0.5f, right - left, kTrackH, kTrackH * 0.5f);
+
+        g.setColour(colour);
+        g.fillRoundedRectangle(
+            left, trackY - kTrackH * 0.5f, sliderPos - left, kTrackH, kTrackH * 0.5f);
+
+        constexpr float kThumbD = 14.0f;
+        g.setColour(colour);
+        g.fillEllipse(sliderPos - kThumbD * 0.5f, trackY - kThumbD * 0.5f, kThumbD, kThumbD);
+        g.setColour(juce::Colour(0xff16181c));
+        g.drawEllipse(sliderPos - kThumbD * 0.5f, trackY - kThumbD * 0.5f, kThumbD, kThumbD, 2.0f);
+    }
 };
 
 } // namespace noisefield::app
