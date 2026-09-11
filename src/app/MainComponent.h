@@ -2,8 +2,10 @@
 
 #include "app/Presets.h"
 #include "engine/AudioEngine.h"
+#include "gui/IconButton.h"
 #include "gui/LevelMeter.h"
 #include "gui/Oscilloscope.h"
+#include "gui/SectionCard.h"
 #include "io/PresetStore.h"
 #include "model/Preset.h"
 
@@ -15,11 +17,12 @@
 namespace noisefield::app
 {
 
-/// Root content component: transport, a collapsible oscilloscope, a level meter, a tone
-/// source (frequency + level), a noise source (colour + level), a master level and a session
-/// timer (duration + fade in/out, auto-stop). The soft limiter and audio-device settings, and
-/// the user guide, live in their own detached windows. Control values (and the scope's
-/// expanded state) persist between runs.
+/// Root content component: a transport bar over a stack of `gui::SectionCard`-backed panels
+/// -- a Monitor (collapsible oscilloscope + level meter + device status), a Preset picker, a
+/// Tone source (frequency + level), a Noise source (colour + level), a Master level, and a
+/// collapsible session timer (duration + fade in/out, auto-stop). The soft limiter and
+/// audio-device settings, and the user guide, live in their own detached windows. Control
+/// values (and which cards are expanded) persist between runs.
 class MainComponent final : public juce::Component, private juce::Timer
 {
 public:
@@ -45,6 +48,7 @@ private:
     void openSettingsWindow();
     void openGuideWindow();
     void setScopeExpanded(bool expanded);
+    void setTimerExpanded(bool expanded);
 
     engine::EngineParameters& params()
     {
@@ -56,12 +60,20 @@ private:
 
     juce::TextButton playButton_{"Play"};
     juce::TextButton masterMuteButton_{"Mute"};
-    juce::TextButton scopeButton_{"Scope"};
-    juce::TextButton guideButton_{"Guide"};
-    juce::TextButton settingsButton_{"Settings"};
+    gui::IconButton scopeButton_{gui::icons::scope};
+    gui::IconButton timerButton_{gui::icons::timer};
+    gui::IconButton guideButton_{gui::icons::guide};
+    gui::IconButton settingsButton_{gui::icons::settings};
+    juce::TooltipWindow tooltipWindow_{nullptr, 700};
+
+    gui::SectionCard monitorCard_;
     gui::Oscilloscope oscilloscope_;
     gui::LevelMeter meter_;
+    juce::Label rateLabel_;  // "44100 Hz", left
+    juce::Label peakLabel_;  // "peak -x.x dBFS", centred
+    juce::Label xrunsLabel_; // "xruns: n", right
 
+    gui::SectionCard presetCard_;
     juce::Label presetLabel_;
     juce::ComboBox presetBox_;
     juce::TextButton savePresetButton_{"Save"};
@@ -69,20 +81,24 @@ private:
     io::PresetStore presetStore_;
     std::vector<juce::String> userPresetNames_;
 
+    gui::SectionCard toneCard_;
     juce::Label toneHeading_;
-    juce::ToggleButton toneEnableButton_{"Enabled"};
+    juce::ToggleButton toneEnableButton_;
     juce::Slider frequencySlider_;
     juce::Slider toneGainSlider_;
 
+    gui::SectionCard noiseCard_;
     juce::Label noiseHeading_;
-    juce::ToggleButton noiseEnableButton_{"Enabled"};
+    juce::ToggleButton noiseEnableButton_;
     juce::ComboBox noiseColourBox_;
     juce::Slider noiseGainSlider_;
     juce::TextButton reseedButton_{"Re-seed"};
 
+    gui::SectionCard masterCard_;
     juce::Label masterHeading_;
     juce::Slider masterGainSlider_;
 
+    gui::SectionCard sessionCard_;
     juce::Label sessionHeading_;
     juce::Slider sessionDurationSlider_;
     juce::Slider sessionFadeInSlider_;
@@ -93,6 +109,7 @@ private:
     juce::Label statusLabel_;
 
     bool scopeExpanded_ = false;
+    bool timerExpanded_ = false;
 
     bool sessionRunning_ = false;
     double sessionElapsedSeconds_ = 0.0;

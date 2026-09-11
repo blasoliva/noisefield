@@ -98,8 +98,10 @@ target_sources(Noisefield PRIVATE
     app/Presets.h
     engine/AudioEngine.h
     gui/DetachedWindow.h
+    gui/IconButton.h
     gui/LevelMeter.h
     gui/Oscilloscope.h
+    gui/SectionCard.h
     gui/SettingsComponent.h
     gui/GuideView.h
     io/PresetStore.h)

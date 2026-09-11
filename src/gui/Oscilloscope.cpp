@@ -31,6 +31,15 @@ void Oscilloscope::paint(juce::Graphics& g)
     g.setColour(juce::Colour(0xff0c0d10));
     g.fillRoundedRectangle(bounds, 3.0f);
 
+    // Faint vertical divisions, like an instrument's graticule.
+    g.setColour(juce::Colour(0x14ffffff));
+    constexpr int kDivisions = 5;
+    for (int i = 1; i < kDivisions; ++i)
+    {
+        const float x = bounds.getX() + bounds.getWidth() * (static_cast<float>(i) / kDivisions);
+        g.drawVerticalLine(juce::roundToInt(x), bounds.getY(), bounds.getBottom());
+    }
+
     // Centre line.
     g.setColour(juce::Colour(0x22ffffff));
     const float midY = bounds.getCentreY();
@@ -64,7 +73,7 @@ void Oscilloscope::paint(juce::Graphics& g)
             path.lineTo(x, y);
     }
 
-    g.setColour(juce::Colour(0xff38bdf8));
+    g.setColour(juce::Colour(0xff5fc7ea));
     g.strokePath(path, juce::PathStrokeType(1.5f));
 
     g.setColour(juce::Colour(0x22ffffff));
