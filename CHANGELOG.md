@@ -4,6 +4,14 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.2.1](https://github.com/blasoliva/noisefield/compare/v0.2.0...v0.2.1) (2026-09-11)
+
+
+### Documentation
+
+* remove personal email from CLAUDE.md and rework README intro ([1a07052](https://github.com/blasoliva/noisefield/commit/1a0705243a1aa5dd5814f79bdf04174c6e6b5c9b))
+* remove personal email from CLAUDE.md and rework README intro ([f43704f](https://github.com/blasoliva/noisefield/commit/f43704f2fcd53f0285ba0628c9b4dd25ca23082e))
+
 ## [0.2.0](https://github.com/blasoliva/noisefield/compare/v0.1.0...v0.2.0) (2026-09-10)
 
 
