@@ -16,10 +16,10 @@ sensation for me at times — that is why it exists.
 
 Noisefield is built 100% AI-assisted.
 
-> Status: **M2 done, M3 in progress.** Tone + six noise colours + mixer + soft-limited master,
-> a dBFS meter, a collapsible oscilloscope, factory and user presets, and a VST3/LV2/CLAP
-> plugin. See [`docs/plan.md`](docs/plan.md) for the full plan and
-> [`docs/backlog.md`](docs/backlog.md) for tasks.
+> Status: **M1–M4 done.** Tone + six noise colours + mixer + soft-limited master, a dBFS
+> meter, a collapsible oscilloscope, factory and user presets, a session timer, explicit
+> JACK support, and a VST3/LV2/CLAP plugin. See [`docs/plan.md`](docs/plan.md) for the full
+> plan and [`docs/backlog.md`](docs/backlog.md) for tasks (mostly icebox from here).
 
 ## Download
 

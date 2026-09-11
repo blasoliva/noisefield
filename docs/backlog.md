@@ -12,7 +12,7 @@ See context and technical rationale in [`plan.md`](plan.md).
 | **M1** | Scaffolding and skeleton | The project builds, passes CI, and opens a window | Phase 0 — ✅ done |
 | **M2** | Audible MVP | Generate a frequency + white noise and mix them | Phase 1 — ✅ code done |
 | **M3** | Noisefield | Multi-layer engine, all noise colors, presets | Phase 2 — ✅ done |
-| **M4** | Tools and distribution | Session timer, JACK support, user manual, AppImage | Phases 3–4 |
+| **M4** | Tools and distribution | Session timer, JACK support, user manual, AppImage | Phases 3–4 — ✅ done |
 
 ---
 
@@ -85,7 +85,7 @@ color) and load/save factory and user presets.
 ## M4 — Tools and distribution
 
 **Exit criterion:** working oscilloscope and meters; session timer with fades; explicit
-JACK support; installable AppImage; user manual.
+JACK support; installable AppImage; user manual. **Met.**
 
 - [x] **NF-061** (S) Oscilloscope with rising-zero-crossing trigger, collapsible in the main
   window (Scope button; window grows/shrinks to fit; state persists). Engine feeds it via
@@ -102,7 +102,8 @@ JACK support; installable AppImage; user manual.
   machines still build); `AudioEngine` tracks a lost device (`audioDeviceStopped`/
   `audioDeviceError` without an intentional `shutdown()`) and the GUI retries
   `restartLastAudioDevice()` every ~3 s until it reconnects.
-- [ ] **NF-076** (M) User manual in `docs/` and release notes.
+- [x] **NF-076** (M) User manual in `docs/` and release notes. `docs/guide.md` covers the
+  session timer and device-reconnect status; release notes stay automated via NF-084.
 
 ### Distribution — installers and releases
 

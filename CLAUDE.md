@@ -6,11 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Noisefield is a native Linux desktop app (C++20 + JUCE 8) that generates a tone and coloured
 noise, mixes them, and sends the result to an audio output — plus a VST3/LV2/CLAP plugin
-from the same engine. It is a personal tinnitus-relief tool. State: **M2** and **M3** done
-(noise colours, presets, engine layer pool; the layer-list GUI and per-layer filter/mixer are
-icebox for now, not on the active roadmap), **M4** in progress (session timer, JACK support,
-user manual left; oscilloscope, dBFS meter, and packaging already in). The roadmap,
-milestones (M1–M4) and the
+from the same engine. It is a personal tinnitus-relief tool. State: **M1–M4 all done** (noise
+colours, presets, engine layer pool, oscilloscope, dBFS meter, session timer, explicit JACK
+support, packaging; the layer-list GUI and per-layer filter/mixer are icebox, not on the
+active roadmap). The roadmap, milestones (M1–M4) and the
 bug list are in `docs/backlog.md`; the design rationale is in `docs/plan.md`.
 
 ## Commands
