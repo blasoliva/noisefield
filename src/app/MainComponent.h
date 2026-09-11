@@ -105,6 +105,8 @@ private:
     void cancelSessionTimer();
     void tickSessionTimer();
 
+    int reconnectCooldown_ = 0; // NF-073: ticks left before the next reconnect attempt
+
     std::unique_ptr<juce::DocumentWindow> settingsWindow_;
     std::unique_ptr<juce::DocumentWindow> guideWindow_;
 

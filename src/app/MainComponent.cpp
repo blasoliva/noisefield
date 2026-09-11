@@ -622,14 +622,40 @@ void MainComponent::timerCallback()
 
     tickSessionTimer();
 
+    // NF-073: the audio device (typically JACK) can disappear and come back at any time; try
+    // to reopen it every ~3s rather than requiring the user to restart the app.
+    if (engine_.deviceLost())
+    {
+        if (reconnectCooldown_ <= 0)
+        {
+            engine_.attemptReconnect();
+            reconnectCooldown_ = 90; // ~3 s at 30 Hz
+        }
+        else
+        {
+            --reconnectCooldown_;
+        }
+    }
+    else
+    {
+        reconnectCooldown_ = 0;
+    }
+
     const auto rate = engine_.sampleRate();
     const auto xruns = engine_.xRunCount();
     const float peakDb = meter_.currentPeakDb();
     juce::String status;
-    status << (rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"));
-    status << "   peak "
-           << (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS";
-    status << "   xruns: " << (xruns < 0 ? juce::String("n/a") : juce::String(xruns));
+    if (engine_.deviceLost())
+    {
+        status << "audio device lost, reconnecting" + uiString("…");
+    }
+    else
+    {
+        status << (rate > 0.0 ? juce::String(rate, 0) + " Hz" : juce::String("audio stopped"));
+        status << "   peak "
+               << (peakDb <= -60.0f ? juce::String("-inf") : juce::String(peakDb, 1)) + " dBFS";
+        status << "   xruns: " << (xruns < 0 ? juce::String("n/a") : juce::String(xruns));
+    }
     statusLabel_.setText(status, juce::dontSendNotification);
 }
 

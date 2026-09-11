@@ -97,7 +97,11 @@ JACK support; installable AppImage; user manual.
   `cmake --install --component noisefield` → `AppDir` → `linuxdeploy --output appimage` →
   `Noisefield-<version>-x86_64.AppImage`. Verified locally (builds, runs). (`.desktop` and
   icon done since M1; "final icon" is still the provisional one.)
-- [ ] **NF-073** (S) Explicit JACK support: port names, reconnection.
+- [x] **NF-073** (S) Explicit JACK support: port names, reconnection. `JUCE_JACK=1` +
+  `JUCE_JACK_CLIENT_NAME="Noisefield"` when `jack/jack.h` is found at configure time (ALSA-only
+  machines still build); `AudioEngine` tracks a lost device (`audioDeviceStopped`/
+  `audioDeviceError` without an intentional `shutdown()`) and the GUI retries
+  `restartLastAudioDevice()` every ~3 s until it reconnects.
 - [ ] **NF-076** (M) User manual in `docs/` and release notes.
 
 ### Distribution — installers and releases
