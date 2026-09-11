@@ -11,8 +11,8 @@ See context and technical rationale in [`plan.md`](plan.md).
 |---|---|---|---|
 | **M1** | Scaffolding and skeleton | The project builds, passes CI, and opens a window | Phase 0 — ✅ done |
 | **M2** | Audible MVP | Generate a frequency + white noise and mix them | Phase 1 — ✅ code done |
-| **M3** | Noisefield | Multi-layer, all noise colors, band filter, presets | Phase 2 — 🚧 in progress |
-| **M4** | Tools and distribution | Analysis, recording, timer, modulation, AppImage/Flatpak | Phases 3–4 |
+| **M3** | Noisefield | Multi-layer engine, all noise colors, presets | Phase 2 — ✅ done |
+| **M4** | Tools and distribution | Session timer, JACK support, user manual, AppImage | Phases 3–4 |
 
 ---
 
@@ -61,67 +61,42 @@ noise, adjust the mix and the master, and listen for 10 min with no clicks or xr
 
 ## M3 — Noisefield
 
-**Exit criterion:** create a project with several layers (oscillators and noise of any color),
-filter each layer by band, mix with pan/mute/solo, and save/load the project and presets.
+**Exit criterion:** run several engine layer voices at once (oscillators and noise of any
+color) and load/save factory and user presets.
 
-- [~] **NF-040** (M) `model::Preset` + flat-JSON serialisation (`model::toJson` / `fromJson`,
-  hand-rolled, JUCE-free, `schemaVersion` field, forward-compatible with unknown keys and
-  nested structures). `test_preset_json.cpp` (round trip, defaults, malformed, schema bump).
-  The `Project` / `Layer` structs (with layers array, session settings) wait for the M3
-  engine rework (NF-041); `Preset` covers today's flat single-tone + single-noise state.
 - [x] **NF-041** (M) Layer management in the engine: `engine::SignalGraph` renders a fixed
   pool of `kMaxLayers` layer voices (oscillator / tinted noise, per-slot smoothed gain).
   Add/remove is an `active` toggle with a per-slot gain crossfade; idle slots are skipped;
   slot reuse is an `epoch` bump that hard-resets the voice. Reorder is free — the mix is a
-  sum. The app + plugin still drive two fixed slots (tone, noise) pending NF-042.
+  sum. The app + plugin still drive two fixed slots (tone, noise); a layer-list GUI is icebox.
   `test_signal_graph.cpp` covers sum / fade-out / fade-in / crossfade / slot reuse / mute /
   full pool.
-- [ ] **NF-042** (M) Layer-list GUI: create, delete, reorder, select; per-layer parameter editing.
 - [x] **NF-043** (M) Pink noise (Kellett filter) — `dsp::NoiseTint`, RMS-matched, spectral-tilt test.
 - [x] **NF-044** (S) Brown noise (leaky integrator) — `dsp::NoiseTint` + test.
 - [x] **NF-045** (S) Blue and violet noise (differentiation) — `dsp::NoiseTint` + tests.
 - [x] **NF-046** (M) Grey noise (approximate inverse equal-loudness shelving) — `dsp::NoiseTint` + test.
   All 6 colours are selectable per-source in the GUI (Noise → Colour) and level-matched;
   `test_noise_tint.cpp` checks bounds, RMS match, the dark→bright ordering and determinism.
-- [ ] **NF-047** (M) Per-layer SVF (TPT) band filter: LP/HP/BP/Notch/off modes, smoothed cutoff and Q.
-- [ ] **NF-048** (M) Full mixer: fader, pan, mute, solo per layer + per-layer meters.
-- [ ] **NF-049** (M) Additional waveforms with PolyBLEP (triangle/square/saw) + aliasing test.
-- [ ] **NF-050** (M) Save/open project (file dialogs) and autosave.
 - [x] **NF-051** (M) Preset system: 8 factory presets (`src/app/Presets.cpp`, as
   `model::Preset`) + user presets saved to `~/.config/Noisefield/presets/*.nfp` via
   `io::PresetStore`. Preset menu has Factory / User sections; **Save** (name prompt) and
   **Delete** buttons.
-- [ ] **NF-052** (S) Performance: 8 layers < 25% of one core at 48 kHz (measurement and profiling).
 
 ## M4 — Tools and distribution
 
-**Exit criterion:** working spectrum analyzer and meters; offline recording and export;
-session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Flatpak.
+**Exit criterion:** working oscilloscope and meters; session timer with fades; explicit
+JACK support; installable AppImage; user manual.
 
-- [ ] **NF-060** (M) FFT spectrum analyzer (window, averaging, log scale) fed by a FIFO.
 - [x] **NF-061** (S) Oscilloscope with rising-zero-crossing trigger, collapsible in the main
   window (Scope button; window grows/shrinks to fit; state persists). Engine feeds it via
   `dsp::ScopeBuffer` (lock-free SPSC ring); `test_scope_buffer.cpp`.
-- [~] **NF-062** (S) Master meter: dBFS scale ticks, peak hold, clip latch, peak-dBFS readout
-  in the status line. Per-layer meters wait for the mixer GUI (NF-048).
-- [ ] **NF-063** (M) WAV/FLAC recorder of the master bus (streaming to disk from a separate thread).
-- [ ] **NF-064** (M) Fixed-duration offline export, faster than real time, with TPDF dither.
 - [ ] **NF-065** (M) Session timer: duration, fade-in/out, automatic stop.
-- [ ] **NF-066** (M) LFO (per-layer and global) assignable to frequency/cutoff/gain/pan.
-- [ ] **NF-067** (M) ADSR envelope and per-layer fade in/out.
-- [ ] **NF-068** (M) Frequency sweep (linear/exponential) and glissando.
-- [ ] **NF-069** (M) Basic modulation matrix (source→destination, amount) + UI.
-- [ ] **NF-070** (S) Stereo width / noise decorrelation between channels.
 - [x] **NF-071** (M) AppImage packaging with `linuxdeploy` (via the release workflow):
   `cmake --install --component noisefield` → `AppDir` → `linuxdeploy --output appimage` →
   `Noisefield-<version>-x86_64.AppImage`. Verified locally (builds, runs). (`.desktop` and
   icon done since M1; "final icon" is still the provisional one.)
-- [ ] **NF-072** (M) Flatpak manifest and local publishing + instructions.
 - [ ] **NF-073** (S) Explicit JACK support: port names, reconnection.
-- [ ] **NF-074** (M) CLI/headless mode: render a project to a file without the GUI.
-- [ ] **NF-075** (M) Accessibility: full keyboard navigation, labels, contrast.
 - [ ] **NF-076** (M) User manual in `docs/` and release notes.
-- [ ] **NF-077** (M) Final RT-safety and stability audit (1-hour session with no xruns).
 
 ### Distribution — installers and releases
 
@@ -140,8 +115,6 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
   `.release-please-manifest.json`; process in `docs/releasing.md`.
 - [x] **NF-084** (S) `CHANGELOG.md` and per-release notes — maintained automatically by
   release-please from the commit history (NF-083). Feeds NF-076.
-- [ ] **NF-085** (S) Ship the plugins in the `.deb` too (install to `/usr/lib/{vst3,lv2,clap}`
-  behind an option), or a separate `noisefield-plugins.deb`.
 
 ---
 
@@ -161,6 +134,17 @@ session timer with fades; LFO/ADSR/sweep modulation; installable AppImage and Fl
 - [ ] **NF-094** Internationalization ES/EN.
 - [ ] **NF-095** EQ profiles / filter-response import.
 - [ ] **NF-096** LFO sync to BPM / tap tempo.
+- [ ] **NF-040** Promote the flat `model::Preset` to the layered `Project`/`Layer` JSON schema
+  (v2): `Layer` list, master bus, session settings, `fromJson` migration — see
+  `src/model/Project.h`, `src/model/Layer.h`. The flat schema (`model::toJson`/`fromJson`)
+  already ships and is tested (`test_preset_json.cpp`); this is the promotion step, blocked
+  on NF-042/NF-050.
+- [ ] **NF-042** Layer-list GUI: create, delete, reorder, select; per-layer parameter editing.
+- [ ] **NF-047** Per-layer SVF (TPT) band filter: LP/HP/BP/Notch/off modes, smoothed cutoff and Q.
+- [ ] **NF-048** Full mixer: fader, pan, mute, solo per layer + per-layer meters.
+- [ ] **NF-049** Additional waveforms with PolyBLEP (triangle/square/saw) + aliasing test.
+- [ ] **NF-050** Save/open project (file dialogs) and autosave.
+- [ ] **NF-052** Performance: 8 layers < 25% of one core at 48 kHz (measurement and profiling).
 
 ---
 

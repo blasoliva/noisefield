@@ -117,7 +117,7 @@ Principles:
   flag — the per-slot gain ramp crossfades them, idle slots cost nothing, and an `epoch`
   bump hard-resets a slot that is reused for a different layer. Mixing is a plain sum, so the
   engine is order-agnostic. As of NF-041 the app and plugin still drive only two fixed slots
-  (tone, noise); the dynamic layer-list GUI is NF-042.
+  (tone, noise); the dynamic layer-list GUI (NF-042) is icebox for now.
 
 ### 3.1 Data model
 
@@ -129,10 +129,10 @@ and nested structures so a v1 build can open a future v2 file. Preset files are 
 (that JSON) under `~/.config/Noisefield/presets/`, managed by `io::PresetStore`.
 
 The **engine** side of layers landed in NF-041 (`engine::SignalGraph` renders a pool of layer
-voices — see §3). The **data model** side is still pending: `model::Preset` stays flat until
-the layer-list GUI (NF-042) and project save/open (NF-050) need it.
+voices — see §3). The **data model** side is icebox: `model::Preset` stays flat unless the
+layer-list GUI (NF-042) and project save/open (NF-050) come off icebox and need it.
 
-**Future (with NF-050):** promote to a **Project** — an ordered list of **Layers** + master
+**If NF-050 is revisited:** promote to a **Project** — an ordered list of **Layers** + master
 bus + session settings (timer, fades). A Layer:
 
 - `type`: `oscillator` | `noise`
@@ -171,33 +171,34 @@ This is the envisioned feature set, not a status tracker — see `backlog.md` fo
 - Multiple layers with a mixer (gain, pan, mute, solo) and an arbitrary layer count.
 - Presets: save/load as JSON, factory presets, A/B comparison.
 
-**Synthesis and modulation (medium):**
+**Synthesis (medium):**
 
 - Additional waveforms with anti-aliasing (PolyBLEP or wavetables).
 - Multiple oscillators; detune/beating between oscillators.
-- Frequency sweep (linear/exponential), glissando.
-- LFO (per-layer and global), ADSR envelope, fade in/out.
-- Modulation matrix (source→destination with amount).
 
 **Tools (medium):**
 
-- Spectrum analyzer (FFT), RMS/peak meters with hold, oscilloscope.
-- Recording to WAV/FLAC and fixed-duration export (offline render faster than real time).
+- RMS/peak meters with hold, oscilloscope.
 - Session timer: play for X minutes with auto fade in/out; scheduled shutdown.
-- Stereo width / noise decorrelation between channels.
 
 **Integration and distribution (medium-low):**
 
 - Explicit JACK support and port reconnection.
-- CLI / headless mode to generate files without the GUI.
-- AppImage + Flatpak; version updates.
-- Accessibility: keyboard navigation, labels, high contrast.
+- AppImage; version updates.
 
 **Long term / icebox:**
 
 - MIDI input (play the oscillator from a keyboard, map CC to parameters).
 - Timeline automation.
 - Internationalization (ES/EN).
+- Spectrum analyzer (FFT).
+- Recording to WAV/FLAC and fixed-duration export (offline render faster than real time).
+- Frequency sweep (linear/exponential), glissando; LFO (per-layer and global); ADSR envelope,
+  fade in/out; modulation matrix (source→destination with amount).
+- Stereo width / noise decorrelation between channels.
+- Flatpak packaging.
+- CLI / headless mode to generate files without the GUI.
+- Accessibility: keyboard navigation, labels, high contrast.
 
 ## 6. DSP design
 
@@ -260,10 +261,9 @@ cmake --build build --target calibrate_noise
   mix + master; smoothing; basic transport.
 - **Phase 2 — Noisefield:** all noise colors; per-layer band filter; multiple layers + mixer
   (pan/mute/solo); JSON presets + factory presets.
-- **Phase 3 — Tools:** spectrum analyzer + meters + oscilloscope; recording/export; session
-  timer with fades; modulation (LFO/ADSR/sweep) and a basic matrix.
-- **Phase 4 — Polish and distribution:** performance and RT-safety audit; AppImage + Flatpak;
-  accessibility; user manual; (optional) plugin skeleton.
+- **Phase 3 — Tools:** meters + oscilloscope; session timer with fades.
+- **Phase 4 — Polish and distribution:** performance and RT-safety audit; AppImage; JACK
+  support; user manual; (optional) plugin skeleton.
 
 ## 9. Proposed directory structure
 
