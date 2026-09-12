@@ -56,9 +56,13 @@ std::string escape(std::string_view s)
 
 std::string number(double v)
 {
+    // std::to_chars is locale-independent (always uses '.'), unlike snprintf's "%g" which
+    // follows LC_NUMERIC — the reader below (std::from_chars) is locale-independent too, so
+    // this keeps the pair symmetric regardless of the process locale (Main.cpp calls
+    // std::setlocale(LC_ALL, "") for Xlib i18n, which would otherwise write e.g. "220,0").
     char buf[32];
-    std::snprintf(buf, sizeof(buf), "%.6g", v);
-    return buf;
+    const auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), v);
+    return std::string(buf, ec == std::errc{} ? ptr : buf);
 }
 
 // ---- reading -----------------------------------------------------------------------------
