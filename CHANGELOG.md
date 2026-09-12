@@ -4,6 +4,13 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.4.1](https://github.com/blasoliva/noisefield/compare/v0.4.0...v0.4.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* **model:** serialize preset numbers locale-independently ([#14](https://github.com/blasoliva/noisefield/issues/14)) ([08e43d0](https://github.com/blasoliva/noisefield/commit/08e43d02bb249c75af082cf8e3f367d3e558c558))
+
 ## [0.4.0](https://github.com/blasoliva/noisefield/compare/v0.3.0...v0.4.0) (2026-09-11)
 
 
