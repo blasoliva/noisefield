@@ -177,10 +177,12 @@ balance control.
   `noisefield::buildInfoString()` (`src/core/BuildInfo.h`, currently unused outside tests).
   Bump `kBaseHeight` in `MainComponent.cpp` to make room.
 
-**Pending:** `docs/images/preset-menu.png` still shows the old **Mute** button (removed in
-NF-100) in the background — regenerating it needs the preset combo box's dropdown open, which
-needs a simulated click; no UI-automation tool (e.g. `xdotool`) was available in the sandbox
-this milestone was built in. Retake it on a real machine.
+**Resolved (2026-09-18):** `docs/images/preset-menu.png` was retaken. It needed the preset
+combo box's dropdown open (a real click), and no `xdotool`-like tool was available in the
+sandbox — worked around with a `python-xlib` script synthesizing an `XTestFakeButtonEvent`
+click at the combo's known layout coordinates (via `pip install --user python-xlib` in a
+throwaway venv, no root needed), against the app running under `Xvfb`. Two throwaway
+`.nfp` files in a scratch `HOME` reproduced the "User" presets section for the shot.
 
 ---
 
