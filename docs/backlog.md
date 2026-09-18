@@ -172,7 +172,7 @@ balance control.
     per-channel gain; the meter and oscilloscope intentionally still read the pre-balance
     mono bus. New fields: `EngineParameters::masterBalance`, `model::Preset::masterBalance`
     (JSON key `masterBalance`), plugin APVTS parameter `masterBalance` ("Master balance").
-- [ ] **NF-105** (S) Add a small app-version footer at the bottom of the main window, in the
+- [x] **NF-105** (S) Add a small app-version footer at the bottom of the main window, in the
   same grey as the oscilloscope's peak/dBFS labels (`juce::Colour(0xff9aa0a6)`). Reuse
   `noisefield::buildInfoString()` (`src/core/BuildInfo.h`, currently unused outside tests).
   Bump `kBaseHeight` in `MainComponent.cpp` to make room.
@@ -239,6 +239,33 @@ balance control.
     | juce::DocumentWindow::closeButton` to the `DocumentWindow` constructor so both buttons
     are always requested, visible, and wired up. Verify on both Ubuntu and Debian (tracked as
     NF-102).
+
+- [ ] **BUG-003** — `noisefield::buildInfoString()` (and `kFullVersion`) can silently show a
+  stale version in a long-lived local build directory, surfaced by NF-105's new footer.
+  - **Cause:** `NOISEFIELD_VERSION` (root `CMakeLists.txt`) is `set(... CACHE STRING ...)`
+    defaulting to `PROJECT_VERSION`. Cache variables are sticky — once written, a later
+    `cmake -B build` reconfigure (e.g. after `git pull`ing a release-please version bump)
+    does **not** refresh it, even though `PROJECT_VERSION` itself updates correctly from the
+    `project(VERSION ...)` line each configure. `Config.h`'s `kFullVersion` (what
+    `buildInfoString()` shows) is generated from the stale cached value; `kVersionString`
+    (from `PROJECT_VERSION`) stays correct. Confirmed in this session's own sandbox: the
+    build directory had `NOISEFIELD_VERSION` stuck at `"0.3.0"` from an old configure, so the
+    new footer (NF-105) showed "Noisefield 0.3.0" while `version.txt`/`CMakeLists.txt` were
+    already at 0.4.1 — until `cmake -B build -UNOISEFIELD_VERSION` (or a fully fresh `build/`)
+    forced it to re-read `PROJECT_VERSION`.
+  - **This also explains the `buildInfoString reports project name and version` test failure**
+    that was (incorrectly) treated as a pre-existing, unrelated flake throughout this session
+    (including in PR #14's description) — it was the exact same stale-cache symptom in this
+    sandbox's own `build/` directory the whole time, not a real code defect. After clearing
+    the cache the test passes; **53/53 tests are green**, not "52/53 plus one known-bad one."
+  - **Not a problem for CI or packaged releases**: `.github/workflows/release.yml` always
+    configures a fresh runner, so it never inherits a stale cache, and the release workflow
+    already passes `-DNOISEFIELD_VERSION=<tag>` explicitly to stamp the exact release string.
+    It only bites a developer's long-lived local `build/` directory across releases.
+  - **Fix not yet chosen**: making a `CACHE` variable "always track a fresh default unless the
+    user/CI explicitly overrides it" isn't a one-line change (a plain, non-cache `set()` would
+    also silently defeat the release workflow's `-D` override). Left open for a deliberate fix
+    rather than bundled into NF-105.
 
 ---
 

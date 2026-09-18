@@ -107,6 +107,7 @@ private:
     juce::Label sessionStatusLabel_;
 
     juce::Label statusLabel_;
+    juce::Label versionLabel_;
 
     bool scopeExpanded_ = false;
     bool timerExpanded_ = false;

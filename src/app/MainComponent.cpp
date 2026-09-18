@@ -1,5 +1,6 @@
 #include "app/MainComponent.h"
 
+#include "core/BuildInfo.h"
 #include "dsp/Constants.h"
 #include "dsp/NoiseColour.h"
 #include "gui/DetachedWindow.h"
@@ -41,7 +42,7 @@ constexpr int kCardGap = 14;
 constexpr int kRowGap = 8;
 constexpr int kHeadGap = 10;
 
-constexpr int kBaseHeight = 652;       // window height, scope + session timer both collapsed
+constexpr int kBaseHeight = 682;       // window height, scope + session timer both collapsed
 constexpr int kScopeBlockHeight = 92;  // extra height when the scope is expanded
 constexpr int kTimerBlockHeight = 178; // extra height when the session timer is expanded
 
@@ -83,10 +84,11 @@ void configureGainSlider(juce::Slider& slider)
 
 void configureBalanceSlider(juce::Slider& slider)
 {
-    slider.setSliderStyle(juce::Slider::LinearHorizontal);
-    slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
-    slider.setRange(-1.0, 1.0, 0.01);
-    slider.setDoubleClickReturnValue(true, 0.0);
+    // textFromValueFunction must be assigned before setTextBoxStyle(): that call triggers
+    // lookAndFeelChanged() synchronously, which creates the text box and formats its initial
+    // content right there -- too late for the lambda to affect it if assigned afterwards, and
+    // since the balance value never changes away from its 0.0 default on a fresh install,
+    // nothing else would ever refresh that stale text.
     slider.textFromValueFunction = [](double v) -> juce::String
     {
         const int percent = static_cast<int>(std::round(std::abs(v) * 100.0));
@@ -102,6 +104,11 @@ void configureBalanceSlider(juce::Slider& slider)
         const double magnitude = trimmed.retainCharacters("0123456789.").getDoubleValue() / 100.0;
         return trimmed.containsIgnoreCase("L") ? -magnitude : magnitude;
     };
+
+    slider.setSliderStyle(juce::Slider::LinearHorizontal);
+    slider.setRange(-1.0, 1.0, 0.01);
+    slider.setDoubleClickReturnValue(true, 0.0);
+    slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
 }
 } // namespace
 
@@ -305,6 +312,11 @@ MainComponent::MainComponent()
     statusLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
     statusLabel_.setJustificationType(juce::Justification::centredLeft);
 
+    versionLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
+    versionLabel_.setJustificationType(juce::Justification::centred);
+    versionLabel_.setFont(juce::Font(juce::FontOptions(11.0f)));
+    versionLabel_.setText(juce::String(buildInfoString()), juce::dontSendNotification);
+
     for (auto* label : {&rateLabel_, &peakLabel_, &xrunsLabel_})
         label->setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
     rateLabel_.setJustificationType(juce::Justification::centredLeft);
@@ -327,6 +339,7 @@ MainComponent::MainComponent()
                                                                       &oscilloscope_,
                                                                       &meter_,
                                                                       &statusLabel_,
+                                                                      &versionLabel_,
                                                                       &rateLabel_,
                                                                       &peakLabel_,
                                                                       &xrunsLabel_,
@@ -913,6 +926,10 @@ void MainComponent::resized()
             sessionStatusLabel_.setBounds(row);
         }
     }
+
+    // ---- Footer: app version, always visible regardless of scope/timer state ----
+    area.removeFromTop(kCardGap);
+    versionLabel_.setBounds(area.removeFromTop(16));
 }
 
 } // namespace noisefield::app

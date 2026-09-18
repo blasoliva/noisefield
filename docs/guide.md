@@ -135,4 +135,6 @@ Changes here are saved and restored automatically.
   to a harsh peak.
 - **Save** a mix you like so you can come back to it; delete the ones that don't work.
 
+The installed version is shown at the bottom of the main window.
+
 This app is a personal tool, not a medical device.
