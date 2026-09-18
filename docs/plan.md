@@ -264,6 +264,8 @@ cmake --build build --target calibrate_noise
 - **Phase 3 — Tools:** meters + oscilloscope; session timer with fades.
 - **Phase 4 — Polish and distribution:** performance and RT-safety audit; AppImage; JACK
   support; user manual; (optional) plugin skeleton.
+- **Phase 5 — UI polish round:** transport cleanup, session-timer startup state, Guide window
+  fixes (readability, window controls), master L/R balance, version footer.
 
 ## 9. Proposed directory structure
 
