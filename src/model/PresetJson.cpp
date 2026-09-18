@@ -332,7 +332,6 @@ std::string toJson(const Preset& p)
     out += "  \"noiseColour\": \"" + std::string(dsp::noiseColourName(p.noiseColour)) + "\",\n";
     out += "  \"noiseGainDb\": " + number(p.noiseGainDb) + ",\n";
     out += "  \"noiseSeed\": " + std::to_string(p.noiseSeed) + ",\n";
-    out += "  \"masterMute\": " + std::string(p.masterMute ? "true" : "false") + ",\n";
     out += "  \"masterGainDb\": " + number(p.masterGainDb) + ",\n";
     out += "  \"limiterEnabled\": " + std::string(p.limiterEnabled ? "true" : "false") + "\n";
     out += "}\n";
@@ -373,7 +372,6 @@ bool fromJson(std::string_view json, Preset& out)
     if (auto it = obj.find("noiseSeed"); it != obj.end() && it->second.type == Value::Type::Number)
         out.noiseSeed = static_cast<std::uint64_t>(it->second.num);
 
-    getBool("masterMute", out.masterMute);
     getNumber("masterGainDb", out.masterGainDb);
     getBool("limiterEnabled", out.limiterEnabled);
 

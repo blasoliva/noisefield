@@ -122,18 +122,6 @@ TEST_CASE("SignalGraph renders a tone at the expected level on both channels", "
         REQUIRE(out.left[i] == out.right[i]);
 }
 
-TEST_CASE("SignalGraph master mute silences the output", "[engine]")
-{
-    SignalGraph graph;
-    graph.prepare(kSampleRate, kBlock);
-    graph.parameters().playing.store(true);
-    addOscillator(graph, 0, 440.0f, 0.0f);
-    graph.parameters().masterMute.store(true);
-
-    const auto out = render(graph, 50);
-    REQUIRE(out.peak < 1.0e-4f);
-}
-
 TEST_CASE("SignalGraph limiter keeps the output inside the unit interval", "[engine]")
 {
     SignalGraph graph;

@@ -8,7 +8,6 @@ audio output. Use it to build a sound that helps in the moment.
 - Press **Play**.
 - Pick a **Preset**, or raise the **Tone** and/or **Noise** level from the bottom.
 - Set the **Frequency**, the **Noise colour**, and the master **Level** to taste.
-- **Mute** silences the output instantly without stopping playback.
 
 Start with the master **Level** low and bring it up slowly. All settings are remembered for
 next time.
@@ -36,7 +35,6 @@ preset is not "locked", it just moves the controls.
 ### Transport
 
 - **Play / Stop** — starts and stops audio processing.
-- **Mute** — instantly silences the master output; playback keeps running.
 - **Level meter** — master output level on a dBFS scale (faint ticks at −48, −36, −24, −12,
   −6). The filled bar is RMS (perceived loudness); the moving mark is the recent peak and
   turns red at 0 dBFS. The small block on the right is a clip latch: it lights red if the

@@ -109,20 +109,9 @@ MainComponent::MainComponent()
         playButton_.setButtonText(on ? "Stop" : "Play");
     };
 
-    masterMuteButton_.setClickingTogglesState(true);
-    masterMuteButton_.onClick = [this]
-    {
-        const bool muted = masterMuteButton_.getToggleState();
-        params().masterMute.store(muted, std::memory_order_relaxed);
-        masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
-    };
-
-    // Toggled on, both read as "active": accent background, dark text so it stays legible.
-    for (auto* b : {&playButton_, &masterMuteButton_})
-    {
-        b->setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff5fc7ea));
-        b->setColour(juce::TextButton::textColourOnId, juce::Colour(0xff14161a));
-    }
+    // Toggled on (Stop), reads as "active": accent background, dark text so it stays legible.
+    playButton_.setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff5fc7ea));
+    playButton_.setColour(juce::TextButton::textColourOnId, juce::Colour(0xff14161a));
 
     scopeButton_.setTooltip("Oscilloscope");
     scopeButton_.setClickingTogglesState(true);
@@ -297,45 +286,26 @@ MainComponent::MainComponent()
     if (const auto error = engine_.initialise(audioState.get()); error.isNotEmpty())
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
-    for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
-                                                                      &masterMuteButton_,
-                                                                      &scopeButton_,
-                                                                      &timerButton_,
-                                                                      &guideButton_,
-                                                                      &settingsButton_,
-                                                                      &monitorCard_,
-                                                                      &oscilloscope_,
-                                                                      &meter_,
-                                                                      &statusLabel_,
-                                                                      &rateLabel_,
-                                                                      &peakLabel_,
-                                                                      &xrunsLabel_,
-                                                                      &presetCard_,
-                                                                      &presetLabel_,
-                                                                      &presetBox_,
-                                                                      &savePresetButton_,
-                                                                      &deletePresetButton_,
-                                                                      &toneCard_,
-                                                                      &toneHeading_,
-                                                                      &toneEnableButton_,
-                                                                      &frequencySlider_,
-                                                                      &toneGainSlider_,
-                                                                      &noiseCard_,
-                                                                      &noiseHeading_,
-                                                                      &noiseEnableButton_,
-                                                                      &noiseColourBox_,
-                                                                      &noiseGainSlider_,
-                                                                      &reseedButton_,
-                                                                      &masterCard_,
-                                                                      &masterHeading_,
-                                                                      &masterGainSlider_,
-                                                                      &sessionCard_,
-                                                                      &sessionHeading_,
-                                                                      &sessionDurationSlider_,
-                                                                      &sessionFadeInSlider_,
-                                                                      &sessionFadeOutSlider_,
-                                                                      &sessionStartButton_,
-                                                                      &sessionStatusLabel_})
+    for (juce::Component* c :
+         std::initializer_list<juce::Component*>{&playButton_,          &scopeButton_,
+                                                 &timerButton_,         &guideButton_,
+                                                 &settingsButton_,      &monitorCard_,
+                                                 &oscilloscope_,        &meter_,
+                                                 &statusLabel_,         &rateLabel_,
+                                                 &peakLabel_,           &xrunsLabel_,
+                                                 &presetCard_,          &presetLabel_,
+                                                 &presetBox_,           &savePresetButton_,
+                                                 &deletePresetButton_,  &toneCard_,
+                                                 &toneHeading_,         &toneEnableButton_,
+                                                 &frequencySlider_,     &toneGainSlider_,
+                                                 &noiseCard_,           &noiseHeading_,
+                                                 &noiseEnableButton_,   &noiseColourBox_,
+                                                 &noiseGainSlider_,     &reseedButton_,
+                                                 &masterCard_,          &masterHeading_,
+                                                 &masterGainSlider_,    &sessionCard_,
+                                                 &sessionHeading_,      &sessionDurationSlider_,
+                                                 &sessionFadeInSlider_, &sessionFadeOutSlider_,
+                                                 &sessionStartButton_,  &sessionStatusLabel_})
         addAndMakeVisible(c);
 
     oscilloscope_.setVisible(scopeExpanded_);
@@ -492,7 +462,6 @@ void MainComponent::applyPreset(const model::Preset& preset)
     noiseEnableButton_.setToggleState(preset.noiseEnabled, juce::sendNotification);
     noiseColourBox_.setSelectedId(colourIndex + 1, juce::sendNotification);
     noiseGainSlider_.setValue(preset.noiseGainDb, juce::sendNotification);
-    masterMuteButton_.setToggleState(preset.masterMute, juce::sendNotification);
     masterGainSlider_.setValue(preset.masterGainDb, juce::sendNotification);
     params().limiterEnabled.store(preset.limiterEnabled, std::memory_order_relaxed);
 }
@@ -508,7 +477,6 @@ model::Preset MainComponent::readState()
         0, static_cast<int>(dsp::kNoiseColours.size()) - 1, noiseColourBox_.getSelectedId() - 1))];
     preset.noiseGainDb = noiseGainSlider_.getValue();
     preset.noiseSeed = params().layer(kNoiseLayer).seed.load(std::memory_order_relaxed);
-    preset.masterMute = masterMuteButton_.getToggleState();
     preset.masterGainDb = masterGainSlider_.getValue();
     preset.limiterEnabled = params().limiterEnabled.load(std::memory_order_relaxed);
     return preset;
@@ -780,8 +748,6 @@ void MainComponent::resized()
 
     auto transport = area.removeFromTop(30);
     playButton_.setBounds(transport.removeFromLeft(80));
-    transport.removeFromLeft(8);
-    masterMuteButton_.setBounds(transport.removeFromLeft(80));
     settingsButton_.setBounds(transport.removeFromRight(40));
     transport.removeFromRight(6);
     guideButton_.setBounds(transport.removeFromRight(40));

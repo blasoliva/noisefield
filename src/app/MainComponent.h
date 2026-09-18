@@ -59,7 +59,6 @@ private:
     engine::AudioEngine engine_;
 
     juce::TextButton playButton_{"Play"};
-    juce::TextButton masterMuteButton_{"Mute"};
     gui::IconButton scopeButton_{gui::icons::scope};
     gui::IconButton timerButton_{gui::icons::timer};
     gui::IconButton guideButton_{gui::icons::guide};

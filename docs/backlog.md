@@ -134,7 +134,7 @@ criterion:** all six tasks below are implemented, covered by tests where the cha
 window fix, and `docs/guide.md` + screenshots reflect the new transport bar and Master
 balance control.
 
-- [ ] **NF-100** (S) Transport: remove the **Mute** button next to **Play**; **Stop** already
+- [x] **NF-100** (S) Transport: remove the **Mute** button next to **Play**; **Stop** already
   silences the output, so a separate mute is redundant. Decided: retire `masterMute`
   entirely — drop it from `engine::EngineParameters`, `model::Preset`/`PresetJson`
   (old `.nfp` files with a leftover `"masterMute"` key stay loadable, since `fromJson`

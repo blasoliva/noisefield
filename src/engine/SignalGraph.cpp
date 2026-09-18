@@ -145,10 +145,9 @@ void SignalGraph::process(float* const* outputChannels,
     // that SignalGraph itself stays free of any framework dependency.
     const bool playing = params_.playing.load(std::memory_order_relaxed);
     const bool limiterOn = params_.limiterEnabled.load(std::memory_order_relaxed);
-    const bool masterOn = playing && !params_.masterMute.load(std::memory_order_relaxed);
 
     masterGain_.setTarget(
-        masterOn ? dsp::dbToGain(params_.masterGainDb.load(std::memory_order_relaxed)) : 0.0f);
+        playing ? dsp::dbToGain(params_.masterGainDb.load(std::memory_order_relaxed)) : 0.0f);
 
     const int frames = std::min(numSamples, static_cast<int>(scratch_.size()));
 

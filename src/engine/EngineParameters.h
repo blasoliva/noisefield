@@ -46,7 +46,6 @@ struct EngineParameters
 {
     // Transport / master
     std::atomic<bool> playing{false};
-    std::atomic<bool> masterMute{false};
     std::atomic<float> masterGainDb{-6.0f};
     std::atomic<bool> limiterEnabled{true};
 

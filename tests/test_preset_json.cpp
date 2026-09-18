@@ -21,7 +21,6 @@ TEST_CASE("Preset survives a JSON round trip", "[model]")
     original.noiseColour = NoiseColour::Brown;
     original.noiseGainDb = -12.0;
     original.noiseSeed = 9876543210ULL;
-    original.masterMute = true;
     original.masterGainDb = -3.0;
     original.limiterEnabled = false;
 
@@ -36,7 +35,6 @@ TEST_CASE("Preset survives a JSON round trip", "[model]")
     REQUIRE(restored.noiseColour == NoiseColour::Brown);
     REQUIRE_THAT(restored.noiseGainDb, Catch::Matchers::WithinAbs(-12.0, 1e-4));
     REQUIRE(restored.noiseSeed == 9876543210ULL);
-    REQUIRE(restored.masterMute == original.masterMute);
     REQUIRE_THAT(restored.masterGainDb, Catch::Matchers::WithinAbs(-3.0, 1e-4));
     REQUIRE(restored.limiterEnabled == original.limiterEnabled);
 }
