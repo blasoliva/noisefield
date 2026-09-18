@@ -20,7 +20,9 @@ public:
         : juce::DocumentWindow(name,
                                juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(
                                    juce::ResizableWindow::backgroundColourId),
-                               juce::DocumentWindow::closeButton),
+                               juce::DocumentWindow::minimiseButton |
+                                   juce::DocumentWindow::maximiseButton |
+                                   juce::DocumentWindow::closeButton),
           onClose_(std::move(onClose))
     {
         setUsingNativeTitleBar(true);
