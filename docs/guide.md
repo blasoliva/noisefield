@@ -81,8 +81,9 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 ### Session timer
 
 An optional sleep-timer: play for a set time, then fade out and stop automatically. The
-clock icon in the transport bar shows or hides this section; like the oscilloscope, the
-window grows and shrinks to fit and the state is remembered between runs.
+clock icon in the transport bar shows or hides this section, and the window grows and
+shrinks to fit — unlike the oscilloscope, this section always starts collapsed when you
+open the app.
 
 - **Duration** — how long the session lasts, in minutes.
 - **Fade in** — how many seconds it takes to rise from silence to your master **Level** when

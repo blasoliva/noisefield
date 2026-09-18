@@ -142,7 +142,7 @@ balance control.
   `playing`), and the plugin's `"masterMute"` APVTS parameter
   (`src/plugin/PluginProcessor.cpp:45`). Breaking the plugin's saved-automation compatibility
   for that parameter is accepted.
-- [ ] **NF-101** (S) Session timer panel: always start collapsed on launch, regardless of
+- [x] **NF-101** (S) Session timer panel: always start collapsed on launch, regardless of
   whether it was left expanded in the previous session. Currently `timerExpanded_` is
   persisted (`kTimerExpandedKey` in `MainComponent.cpp`) and correctly re-applied at startup —
   so a fresh install already starts collapsed, but a returning user who last expanded it sees

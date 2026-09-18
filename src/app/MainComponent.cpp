@@ -25,7 +25,6 @@ constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
-constexpr auto kTimerExpandedKey = "timerExpanded";
 constexpr auto kAudioStateKey = "audioDeviceState";
 constexpr auto kSessionDurationKey = "sessionDurationMinutes";
 constexpr auto kSessionFadeInKey = "sessionFadeInSeconds";
@@ -414,7 +413,9 @@ void MainComponent::loadSettings()
                                   std::memory_order_relaxed);
 
     scopeExpanded_ = store->getBoolValue(kScopeExpandedKey, false);
-    timerExpanded_ = store->getBoolValue(kTimerExpandedKey, false);
+    // Unlike the scope, the session timer panel always starts collapsed — it's a one-off
+    // control you set up per session, not a persistent view preference.
+    timerExpanded_ = false;
 
     sessionDurationSlider_.setValue(store->getDoubleValue(kSessionDurationKey, 30.0),
                                     juce::dontSendNotification);
@@ -437,7 +438,6 @@ void MainComponent::saveSettings()
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
     store->setValue(kScopeExpandedKey, scopeExpanded_);
-    store->setValue(kTimerExpandedKey, timerExpanded_);
 
     store->setValue(kSessionDurationKey, sessionDurationSlider_.getValue());
     store->setValue(kSessionFadeInKey, sessionFadeInSlider_.getValue());
