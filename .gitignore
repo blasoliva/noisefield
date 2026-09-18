@@ -23,6 +23,10 @@ compile_commands.json
 .cache/
 *.swp
 *~
+*.code-workspace
+
+# Local MCP server config (may hold tokens/env)
+/.mcp.json
 
 # OS
 .DS_Store
