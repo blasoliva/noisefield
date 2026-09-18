@@ -13,7 +13,7 @@ See context and technical rationale in [`plan.md`](plan.md).
 | **M2** | Audible MVP | Generate a frequency + white noise and mix them | Phase 1 — ✅ code done |
 | **M3** | Noisefield | Multi-layer engine, all noise colors, presets | Phase 2 — ✅ done |
 | **M4** | Tools and distribution | Session timer, JACK support, user manual, AppImage | Phases 3–4 — ✅ done |
-| **M5** | UI polish round | Transport cleanup, session-timer startup state, Guide window fixes, master balance, version footer | Phase 5 — [~] implemented, pending on-device Guide-window check (NF-102) |
+| **M5** | UI polish round | Transport cleanup, session-timer startup state, Guide window fixes, master balance, version footer | Phase 5 — ✅ done |
 
 ---
 
@@ -126,7 +126,7 @@ JACK support; installable AppImage; user manual. **Met.**
 
 ---
 
-## M5 — UI polish round
+## M5 — UI polish round — ✅ done (2026-09-18)
 
 **Origin:** user review, 2026-09-18 (five requests against the 0.4.1 build). **Exit
 criterion:** all six tasks below are implemented, covered by tests where the change touches
@@ -148,7 +148,7 @@ balance control.
   so a fresh install already starts collapsed, but a returning user who last expanded it sees
   it expanded again. Stop restoring the persisted value at startup (always init `false`) while
   keeping in-session toggle-via-click behaviour unchanged.
-- [~] **NF-102** (S) **BUG-002** fix: see the *Bugs to resolve* entry below — the Guide/Settings
+- [x] **NF-102** (S) **BUG-002** fix: see the *Bugs to resolve* entry below — the Guide/Settings
   window's minimize/maximize decorations should always be visible and functional.
 - [x] **NF-103** (M) Guide window: text is too small to read comfortably and has no way to
   resize. Add zoom in/out bound to **Ctrl +** / **Ctrl -** (and ideally **Ctrl 0** to reset),
@@ -224,7 +224,7 @@ balance control.
   - Convention: user-facing literals with non-ASCII characters go through
     `juce::String::fromUTF8` (or `uiString`).
 
-- [~] **BUG-002** — Guide window's minimize/maximize buttons are inconsistent across distros
+- [x] **BUG-002** — Guide window's minimize/maximize buttons are inconsistent across distros
   and non-functional even when shown.
   - **Reported:** on Ubuntu 24.04.5 the buttons appear but clicking them does nothing; on
     Debian 12 they don't appear at all.
@@ -237,8 +237,9 @@ balance control.
     which matches the reported symptom on both distros.
   - **Fix:** pass `juce::DocumentWindow::minimiseButton | juce::DocumentWindow::maximiseButton
     | juce::DocumentWindow::closeButton` to the `DocumentWindow` constructor so both buttons
-    are always requested, visible, and wired up. Verify on both Ubuntu and Debian (tracked as
-    NF-102).
+    are always requested, visible, and wired up.
+  - **Verified** on real Ubuntu and Debian machines (tracked as NF-102): both buttons show up
+    and work on both distros.
 
 - [ ] **BUG-003** — `noisefield::buildInfoString()` (and `kFullVersion`) can silently show a
   stale version in a long-lived local build directory, surfaced by NF-105's new footer.
