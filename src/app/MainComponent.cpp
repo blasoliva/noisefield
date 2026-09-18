@@ -8,6 +8,7 @@
 #include "model/PresetJson.h"
 
 #include <algorithm>
+#include <cmath>
 #include <initializer_list>
 #include <memory>
 
@@ -23,6 +24,7 @@ constexpr auto kNoiseGainKey = "noiseGainDb";
 constexpr auto kNoiseEnabledKey = "noiseEnabled";
 constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
+constexpr auto kMasterBalanceKey = "masterBalance";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
 constexpr auto kGuideZoomKey = "guideZoom";
@@ -39,7 +41,7 @@ constexpr int kCardGap = 14;
 constexpr int kRowGap = 8;
 constexpr int kHeadGap = 10;
 
-constexpr int kBaseHeight = 616;       // window height, scope + session timer both collapsed
+constexpr int kBaseHeight = 652;       // window height, scope + session timer both collapsed
 constexpr int kScopeBlockHeight = 92;  // extra height when the scope is expanded
 constexpr int kTimerBlockHeight = 178; // extra height when the session timer is expanded
 
@@ -77,6 +79,29 @@ void configureGainSlider(juce::Slider& slider)
     slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
     slider.setRange(dsp::kMinGainDb, 0.0, 0.1);
     slider.setTextValueSuffix(" dB");
+}
+
+void configureBalanceSlider(juce::Slider& slider)
+{
+    slider.setSliderStyle(juce::Slider::LinearHorizontal);
+    slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
+    slider.setRange(-1.0, 1.0, 0.01);
+    slider.setDoubleClickReturnValue(true, 0.0);
+    slider.textFromValueFunction = [](double v) -> juce::String
+    {
+        const int percent = static_cast<int>(std::round(std::abs(v) * 100.0));
+        if (percent == 0)
+            return "C";
+        return juce::String(percent) + (v < 0.0 ? "% L" : "% R");
+    };
+    slider.valueFromTextFunction = [](const juce::String& text) -> double
+    {
+        const auto trimmed = text.trim();
+        if (trimmed.equalsIgnoreCase("C"))
+            return 0.0;
+        const double magnitude = trimmed.retainCharacters("0123456789.").getDoubleValue() / 100.0;
+        return trimmed.containsIgnoreCase("L") ? -magnitude : magnitude;
+    };
 }
 } // namespace
 
@@ -241,6 +266,13 @@ MainComponent::MainComponent()
                                     std::memory_order_relaxed);
     };
 
+    configureBalanceSlider(masterBalanceSlider_);
+    masterBalanceSlider_.onValueChange = [this]
+    {
+        params().masterBalance.store(static_cast<float>(masterBalanceSlider_.getValue()),
+                                     std::memory_order_relaxed);
+    };
+
     styleHeading(sessionHeading_, "Session timer");
 
     sessionDurationSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
@@ -286,26 +318,45 @@ MainComponent::MainComponent()
     if (const auto error = engine_.initialise(audioState.get()); error.isNotEmpty())
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
-    for (juce::Component* c :
-         std::initializer_list<juce::Component*>{&playButton_,          &scopeButton_,
-                                                 &timerButton_,         &guideButton_,
-                                                 &settingsButton_,      &monitorCard_,
-                                                 &oscilloscope_,        &meter_,
-                                                 &statusLabel_,         &rateLabel_,
-                                                 &peakLabel_,           &xrunsLabel_,
-                                                 &presetCard_,          &presetLabel_,
-                                                 &presetBox_,           &savePresetButton_,
-                                                 &deletePresetButton_,  &toneCard_,
-                                                 &toneHeading_,         &toneEnableButton_,
-                                                 &frequencySlider_,     &toneGainSlider_,
-                                                 &noiseCard_,           &noiseHeading_,
-                                                 &noiseEnableButton_,   &noiseColourBox_,
-                                                 &noiseGainSlider_,     &reseedButton_,
-                                                 &masterCard_,          &masterHeading_,
-                                                 &masterGainSlider_,    &sessionCard_,
-                                                 &sessionHeading_,      &sessionDurationSlider_,
-                                                 &sessionFadeInSlider_, &sessionFadeOutSlider_,
-                                                 &sessionStartButton_,  &sessionStatusLabel_})
+    for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
+                                                                      &scopeButton_,
+                                                                      &timerButton_,
+                                                                      &guideButton_,
+                                                                      &settingsButton_,
+                                                                      &monitorCard_,
+                                                                      &oscilloscope_,
+                                                                      &meter_,
+                                                                      &statusLabel_,
+                                                                      &rateLabel_,
+                                                                      &peakLabel_,
+                                                                      &xrunsLabel_,
+                                                                      &presetCard_,
+                                                                      &presetLabel_,
+                                                                      &presetBox_,
+                                                                      &savePresetButton_,
+                                                                      &deletePresetButton_,
+                                                                      &toneCard_,
+                                                                      &toneHeading_,
+                                                                      &toneEnableButton_,
+                                                                      &frequencySlider_,
+                                                                      &toneGainSlider_,
+                                                                      &noiseCard_,
+                                                                      &noiseHeading_,
+                                                                      &noiseEnableButton_,
+                                                                      &noiseColourBox_,
+                                                                      &noiseGainSlider_,
+                                                                      &reseedButton_,
+                                                                      &masterCard_,
+                                                                      &masterHeading_,
+                                                                      &masterGainSlider_,
+                                                                      &masterBalanceSlider_,
+                                                                      &sessionCard_,
+                                                                      &sessionHeading_,
+                                                                      &sessionDurationSlider_,
+                                                                      &sessionFadeInSlider_,
+                                                                      &sessionFadeOutSlider_,
+                                                                      &sessionStartButton_,
+                                                                      &sessionStatusLabel_})
         addAndMakeVisible(c);
 
     oscilloscope_.setVisible(scopeExpanded_);
@@ -413,6 +464,9 @@ void MainComponent::loadSettings()
                                   juce::dontSendNotification);
     masterGainSlider_.setValue(store->getDoubleValue(kMasterGainKey, params().masterGainDb.load()),
                                juce::dontSendNotification);
+    masterBalanceSlider_.setValue(
+        store->getDoubleValue(kMasterBalanceKey, params().masterBalance.load()),
+        juce::dontSendNotification);
 
     params().limiterEnabled.store(store->getBoolValue(kLimiterKey, params().limiterEnabled.load()),
                                   std::memory_order_relaxed);
@@ -442,6 +496,7 @@ void MainComponent::saveSettings()
     store->setValue(kNoiseEnabledKey, noiseEnableButton_.getToggleState());
     store->setValue(kNoiseColourKey, noiseColourBox_.getSelectedId() - 1);
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
+    store->setValue(kMasterBalanceKey, masterBalanceSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
     store->setValue(kScopeExpandedKey, scopeExpanded_);
     store->setValue(kGuideZoomKey, static_cast<double>(guideZoom_));
@@ -470,6 +525,7 @@ void MainComponent::applyPreset(const model::Preset& preset)
     noiseColourBox_.setSelectedId(colourIndex + 1, juce::sendNotification);
     noiseGainSlider_.setValue(preset.noiseGainDb, juce::sendNotification);
     masterGainSlider_.setValue(preset.masterGainDb, juce::sendNotification);
+    masterBalanceSlider_.setValue(preset.masterBalance, juce::sendNotification);
     params().limiterEnabled.store(preset.limiterEnabled, std::memory_order_relaxed);
 }
 
@@ -485,6 +541,7 @@ model::Preset MainComponent::readState()
     preset.noiseGainDb = noiseGainSlider_.getValue();
     preset.noiseSeed = params().layer(kNoiseLayer).seed.load(std::memory_order_relaxed);
     preset.masterGainDb = masterGainSlider_.getValue();
+    preset.masterBalance = masterBalanceSlider_.getValue();
     preset.limiterEnabled = params().limiterEnabled.load(std::memory_order_relaxed);
     return preset;
 }
@@ -825,10 +882,12 @@ void MainComponent::resized()
 
     // ---- Master ----
     {
-        auto inner = takeCard(area, masterCard_, 22 + kHeadGap + 28);
+        auto inner = takeCard(area, masterCard_, 22 + kHeadGap + 28 + kRowGap + 28);
         masterHeading_.setBounds(inner.removeFromTop(22));
         inner.removeFromTop(kHeadGap);
         masterGainSlider_.setBounds(inner.removeFromTop(28));
+        inner.removeFromTop(kRowGap);
+        masterBalanceSlider_.setBounds(inner.removeFromTop(28));
     }
 
     // ---- Session timer (collapsible, via the Timer button) ----

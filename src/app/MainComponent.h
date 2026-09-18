@@ -96,6 +96,7 @@ private:
     gui::SectionCard masterCard_;
     juce::Label masterHeading_;
     juce::Slider masterGainSlider_;
+    juce::Slider masterBalanceSlider_;
 
     gui::SectionCard sessionCard_;
     juce::Label sessionHeading_;

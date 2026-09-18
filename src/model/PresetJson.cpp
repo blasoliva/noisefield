@@ -333,6 +333,7 @@ std::string toJson(const Preset& p)
     out += "  \"noiseGainDb\": " + number(p.noiseGainDb) + ",\n";
     out += "  \"noiseSeed\": " + std::to_string(p.noiseSeed) + ",\n";
     out += "  \"masterGainDb\": " + number(p.masterGainDb) + ",\n";
+    out += "  \"masterBalance\": " + number(p.masterBalance) + ",\n";
     out += "  \"limiterEnabled\": " + std::string(p.limiterEnabled ? "true" : "false") + "\n";
     out += "}\n";
     return out;
@@ -373,6 +374,7 @@ bool fromJson(std::string_view json, Preset& out)
         out.noiseSeed = static_cast<std::uint64_t>(it->second.num);
 
     getNumber("masterGainDb", out.masterGainDb);
+    getNumber("masterBalance", out.masterBalance);
     getBool("limiterEnabled", out.limiterEnabled);
 
     return true;

@@ -51,6 +51,14 @@ Rendered render(SignalGraph& graph, int numBlocks)
     return r;
 }
 
+float peakAbs(const std::vector<float>& x)
+{
+    float worst = 0.0f;
+    for (const float v : x)
+        worst = std::max(worst, std::abs(v));
+    return worst;
+}
+
 // Largest sample-to-sample jump -- a proxy for an audible click / step discontinuity.
 float maxStep(const std::vector<float>& x)
 {
@@ -120,6 +128,42 @@ TEST_CASE("SignalGraph renders a tone at the expected level on both channels", "
     REQUIRE_THAT(out.leftRms, Catch::Matchers::WithinAbs(0.3536, 0.03));
     for (size_t i = 0; i < out.left.size(); ++i)
         REQUIRE(out.left[i] == out.right[i]);
+}
+
+TEST_CASE("SignalGraph master balance hard left silences the right channel", "[engine]")
+{
+    SignalGraph graph;
+    graph.prepare(kSampleRate, kBlock);
+    auto& p = graph.parameters();
+    p.playing.store(true);
+    p.masterGainDb.store(0.0f);
+    p.limiterEnabled.store(false);
+    p.masterBalance.store(-1.0f);
+    addOscillator(graph, 0, 440.0f, 0.0f);
+
+    const auto out = render(graph, 20);
+    const std::vector<float> tailRight(out.right.end() - kBlock, out.right.end());
+
+    REQUIRE(peakAbs(tailRight) < 1.0e-4f); // past the balance ramp
+    REQUIRE(peakAbs(out.left) > 0.9f);
+}
+
+TEST_CASE("SignalGraph master balance hard right silences the left channel", "[engine]")
+{
+    SignalGraph graph;
+    graph.prepare(kSampleRate, kBlock);
+    auto& p = graph.parameters();
+    p.playing.store(true);
+    p.masterGainDb.store(0.0f);
+    p.limiterEnabled.store(false);
+    p.masterBalance.store(1.0f);
+    addOscillator(graph, 0, 440.0f, 0.0f);
+
+    const auto out = render(graph, 20);
+    const std::vector<float> tailLeft(out.left.end() - kBlock, out.left.end());
+
+    REQUIRE(peakAbs(tailLeft) < 1.0e-4f); // past the balance ramp
+    REQUIRE(peakAbs(out.right) > 0.9f);
 }
 
 TEST_CASE("SignalGraph limiter keeps the output inside the unit interval", "[engine]")

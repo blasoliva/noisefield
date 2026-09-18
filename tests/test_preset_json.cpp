@@ -22,6 +22,7 @@ TEST_CASE("Preset survives a JSON round trip", "[model]")
     original.noiseGainDb = -12.0;
     original.noiseSeed = 9876543210ULL;
     original.masterGainDb = -3.0;
+    original.masterBalance = -0.4;
     original.limiterEnabled = false;
 
     Preset restored;
@@ -36,6 +37,7 @@ TEST_CASE("Preset survives a JSON round trip", "[model]")
     REQUIRE_THAT(restored.noiseGainDb, Catch::Matchers::WithinAbs(-12.0, 1e-4));
     REQUIRE(restored.noiseSeed == 9876543210ULL);
     REQUIRE_THAT(restored.masterGainDb, Catch::Matchers::WithinAbs(-3.0, 1e-4));
+    REQUIRE_THAT(restored.masterBalance, Catch::Matchers::WithinAbs(-0.4, 1e-4));
     REQUIRE(restored.limiterEnabled == original.limiterEnabled);
 }
 

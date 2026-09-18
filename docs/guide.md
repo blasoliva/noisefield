@@ -78,6 +78,9 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 ### Master
 
 - **Level** — overall output loudness, applied after the tone and noise are summed.
+- **Balance** — shifts the master output between the left and right speakers. Centred (**C**)
+  leaves both channels untouched; dragging it toward one side fades out the other one, down to
+  full silence at the extreme. Double-click to snap back to centre.
 
 ### Session timer
 

@@ -36,7 +36,9 @@ public:
     void prepare(double sampleRate, int maxBlockSize);
     void reset() noexcept;
 
-    /// Renders `numSamples` frames of the mono signal into every output channel.
+    /// Renders `numSamples` frames of the master mix into every output channel, splitting
+    /// channels 0/1 (left/right) by `EngineParameters::masterBalance`; any further channel
+    /// gets the same signal as channel 0.
     void process(float* const* outputChannels, int numOutputChannels, int numSamples) noexcept;
 
     EngineParameters& parameters() noexcept
@@ -79,6 +81,8 @@ private:
     std::array<LayerVoice, kMaxLayers> voices_;
     dsp::SoftLimiter limiter_;
     dsp::ParamSmoother masterGain_;
+    dsp::ParamSmoother leftBalanceGain_;
+    dsp::ParamSmoother rightBalanceGain_;
     dsp::ScopeBuffer scope_;
 
     std::vector<float> scratch_;

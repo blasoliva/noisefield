@@ -155,7 +155,7 @@ balance control.
   scaling every font size in `gui::GuideView::Page::build()` by a stored factor and
   re-laying-out; no UI button required. Consider persisting the chosen zoom level alongside
   the other `juce::PropertiesFile` state.
-- [ ] **NF-104** (M) Master: add an **L/R balance** fader (same style as the Master/Tone
+- [x] **NF-104** (M) Master: add an **L/R balance** fader (same style as the Master/Tone
   gain faders) inside the Master card, applied to the master output. Needs a new ramped
   engine parameter (`dsp::ParamSmoother`, like every other audible control —
   `docs/realtime-rules.md` applies), a pan law decision (linear vs. equal-power) applied
@@ -164,6 +164,14 @@ balance control.
   (`juce::PropertiesFile` + `model::Preset`, no schema bump needed since `fromJson` defaults
   missing keys), and a mirrored plugin APVTS parameter for consistency with the other master
   controls.
+  - **Resolved:** classic hi-fi "balance" law, not a mono pan law — centred (0) leaves both
+    channels at unity gain (byte-identical to the signal before this control existed), and
+    moving to one side tapers the *other* channel down with an equal-power (cosine) curve,
+    reaching full silence at +-1 (`balanceGains()` in `src/engine/SignalGraph.cpp`). Two
+    independent `dsp::ParamSmoother`s (`leftBalanceGain_`/`rightBalanceGain_`) ramp the
+    per-channel gain; the meter and oscilloscope intentionally still read the pre-balance
+    mono bus. New fields: `EngineParameters::masterBalance`, `model::Preset::masterBalance`
+    (JSON key `masterBalance`), plugin APVTS parameter `masterBalance` ("Master balance").
 - [ ] **NF-105** (S) Add a small app-version footer at the bottom of the main window, in the
   same grey as the oscilloscope's peak/dBFS labels (`juce::Colour(0xff9aa0a6)`). Reuse
   `noisefield::buildInfoString()` (`src/core/BuildInfo.h`, currently unused outside tests).
