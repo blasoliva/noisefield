@@ -13,6 +13,7 @@ See context and technical rationale in [`plan.md`](plan.md).
 | **M2** | Audible MVP | Generate a frequency + white noise and mix them | Phase 1 — ✅ code done |
 | **M3** | Noisefield | Multi-layer engine, all noise colors, presets | Phase 2 — ✅ done |
 | **M4** | Tools and distribution | Session timer, JACK support, user manual, AppImage | Phases 3–4 — ✅ done |
+| **M5** | UI polish round | Transport cleanup, session-timer startup state, Guide window fixes, master balance, version footer | Phase 5 — ✅ done |
 
 ---
 
@@ -125,6 +126,59 @@ JACK support; installable AppImage; user manual. **Met.**
 
 ---
 
+## M5 — UI polish round — ✅ done (2026-09-18)
+
+**Origin:** user review, 2026-09-18 (five requests against the 0.4.1 build). **Exit
+criterion:** all six tasks below are implemented, covered by tests where the change touches
+`engine::SignalGraph` or `model::Preset`, verified on both Ubuntu and Debian for the Guide
+window fix, and `docs/guide.md` + screenshots reflect the new transport bar and Master
+balance control.
+
+- [x] **NF-100** (S) Transport: remove the **Mute** button next to **Play**; **Stop** already
+  silences the output, so a separate mute is redundant. Decided: retire `masterMute`
+  entirely — drop it from `engine::EngineParameters`, `model::Preset`/`PresetJson`
+  (old `.nfp` files with a leftover `"masterMute"` key stay loadable, since `fromJson`
+  already ignores unknown keys), `SignalGraph`'s `masterOn` check (collapses to just
+  `playing`), and the plugin's `"masterMute"` APVTS parameter
+  (`src/plugin/PluginProcessor.cpp:45`). Breaking the plugin's saved-automation compatibility
+  for that parameter is accepted.
+- [x] **NF-101** (S) Session timer panel: always start collapsed on launch, regardless of
+  whether it was left expanded in the previous session. Currently `timerExpanded_` is
+  persisted (`kTimerExpandedKey` in `MainComponent.cpp`) and correctly re-applied at startup —
+  so a fresh install already starts collapsed, but a returning user who last expanded it sees
+  it expanded again. Stop restoring the persisted value at startup (always init `false`) while
+  keeping in-session toggle-via-click behaviour unchanged.
+- [x] **NF-102** (S) **BUG-002** fix: see the *Bugs to resolve* entry below — the Guide/Settings
+  window's minimize/maximize decorations should always be visible and functional.
+- [x] **NF-103** (M) Guide window: text is too small to read comfortably and has no way to
+  resize. Add zoom in/out bound to **Ctrl +** / **Ctrl -** (and ideally **Ctrl 0** to reset),
+  scaling every font size in `gui::GuideView::Page::build()` by a stored factor and
+  re-laying-out; no UI button required. Consider persisting the chosen zoom level alongside
+  the other `juce::PropertiesFile` state.
+- [x] **NF-104** (M) Master: add an **L/R balance** fader (same style as the Master/Tone
+  gain faders) inside the Master card, applied to the master output. Needs a new ramped
+  engine parameter (`dsp::ParamSmoother`, like every other audible control —
+  `docs/realtime-rules.md` applies), a pan law decision (linear vs. equal-power) applied
+  per-channel in `SignalGraph::process()` (currently a mono sum is duplicated to every output
+  channel — see `src/engine/SignalGraph.cpp:140`), a GUI fader, persistence
+  (`juce::PropertiesFile` + `model::Preset`, no schema bump needed since `fromJson` defaults
+  missing keys), and a mirrored plugin APVTS parameter for consistency with the other master
+  controls.
+  - **Resolved:** classic hi-fi "balance" law, not a mono pan law — centred (0) leaves both
+    channels at unity gain (byte-identical to the signal before this control existed), and
+    moving to one side tapers the *other* channel down with an equal-power (cosine) curve,
+    reaching full silence at +-1 (`balanceGains()` in `src/engine/SignalGraph.cpp`). Two
+    independent `dsp::ParamSmoother`s (`leftBalanceGain_`/`rightBalanceGain_`) ramp the
+    per-channel gain; the meter and oscilloscope intentionally still read the pre-balance
+    mono bus. New fields: `EngineParameters::masterBalance`, `model::Preset::masterBalance`
+    (JSON key `masterBalance`), plugin APVTS parameter `masterBalance` ("Master balance").
+- [x] **NF-105** (S) Add a small app-version footer at the bottom of the main window, in the
+  same grey as the oscilloscope's peak/dBFS labels (`juce::Colour(0xff9aa0a6)`). Reuse
+  `noisefield::buildInfoString()` (`src/core/BuildInfo.h`, currently unused outside tests).
+  Bump `kBaseHeight` in `MainComponent.cpp` to make room.
+
+---
+
 ## Icebox (post-M4, no milestone)
 
 - [x] **NF-090** Plugin: **VST3 + LV2 + CLAP** from the shared `engine::SignalGraph`
@@ -169,6 +223,50 @@ JACK support; installable AppImage; user manual. **Met.**
     carries `... 20 e2 80 94 20 ...` (a real U+2014).
   - Convention: user-facing literals with non-ASCII characters go through
     `juce::String::fromUTF8` (or `uiString`).
+
+- [x] **BUG-002** — Guide window's minimize/maximize buttons are inconsistent across distros
+  and non-functional even when shown.
+  - **Reported:** on Ubuntu 24.04.5 the buttons appear but clicking them does nothing; on
+    Debian 12 they don't appear at all.
+  - **Likely cause:** `gui::DetachedWindow` (`src/gui/DetachedWindow.h`) constructs its
+    `juce::DocumentWindow` with only `juce::DocumentWindow::closeButton`, no
+    `minimiseButton`/`maximiseButton` flags. With `setUsingNativeTitleBar(true)`, JUCE turns
+    the requested button set into Motif/EWMH window-manager hints that disable those
+    decorations; window managers differ in whether they honor the hint by hiding the buttons
+    (Debian's) or by drawing them anyway while still refusing the action (Ubuntu/Mutter's) —
+    which matches the reported symptom on both distros.
+  - **Fix:** pass `juce::DocumentWindow::minimiseButton | juce::DocumentWindow::maximiseButton
+    | juce::DocumentWindow::closeButton` to the `DocumentWindow` constructor so both buttons
+    are always requested, visible, and wired up.
+  - **Verified** on real Ubuntu and Debian machines (tracked as NF-102): both buttons show up
+    and work on both distros.
+
+- [ ] **BUG-003** — `noisefield::buildInfoString()` (and `kFullVersion`) can silently show a
+  stale version in a long-lived local build directory, surfaced by NF-105's new footer.
+  - **Cause:** `NOISEFIELD_VERSION` (root `CMakeLists.txt`) is `set(... CACHE STRING ...)`
+    defaulting to `PROJECT_VERSION`. Cache variables are sticky — once written, a later
+    `cmake -B build` reconfigure (e.g. after `git pull`ing a release-please version bump)
+    does **not** refresh it, even though `PROJECT_VERSION` itself updates correctly from the
+    `project(VERSION ...)` line each configure. `Config.h`'s `kFullVersion` (what
+    `buildInfoString()` shows) is generated from the stale cached value; `kVersionString`
+    (from `PROJECT_VERSION`) stays correct. Confirmed in this session's own sandbox: the
+    build directory had `NOISEFIELD_VERSION` stuck at `"0.3.0"` from an old configure, so the
+    new footer (NF-105) showed "Noisefield 0.3.0" while `version.txt`/`CMakeLists.txt` were
+    already at 0.4.1 — until `cmake -B build -UNOISEFIELD_VERSION` (or a fully fresh `build/`)
+    forced it to re-read `PROJECT_VERSION`.
+  - **This also explains the `buildInfoString reports project name and version` test failure**
+    that was (incorrectly) treated as a pre-existing, unrelated flake throughout this session
+    (including in PR #14's description) — it was the exact same stale-cache symptom in this
+    sandbox's own `build/` directory the whole time, not a real code defect. After clearing
+    the cache the test passes; **53/53 tests are green**, not "52/53 plus one known-bad one."
+  - **Not a problem for CI or packaged releases**: `.github/workflows/release.yml` always
+    configures a fresh runner, so it never inherits a stale cache, and the release workflow
+    already passes `-DNOISEFIELD_VERSION=<tag>` explicitly to stamp the exact release string.
+    It only bites a developer's long-lived local `build/` directory across releases.
+  - **Fix not yet chosen**: making a `CACHE` variable "always track a fresh default unless the
+    user/CI explicitly overrides it" isn't a one-line change (a plain, non-cache `set()` would
+    also silently defeat the release workflow's `-D` override). Left open for a deliberate fix
+    rather than bundled into NF-105.
 
 ---
 

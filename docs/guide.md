@@ -8,7 +8,6 @@ audio output. Use it to build a sound that helps in the moment.
 - Press **Play**.
 - Pick a **Preset**, or raise the **Tone** and/or **Noise** level from the bottom.
 - Set the **Frequency**, the **Noise colour**, and the master **Level** to taste.
-- **Mute** silences the output instantly without stopping playback.
 
 Start with the master **Level** low and bring it up slowly. All settings are remembered for
 next time.
@@ -36,7 +35,6 @@ preset is not "locked", it just moves the controls.
 ### Transport
 
 - **Play / Stop** — starts and stops audio processing.
-- **Mute** — instantly silences the master output; playback keeps running.
 - **Level meter** — master output level on a dBFS scale (faint ticks at −48, −36, −24, −12,
   −6). The filled bar is RMS (perceived loudness); the moving mark is the recent peak and
   turns red at 0 dBFS. The small block on the right is a clip latch: it lights red if the
@@ -44,7 +42,8 @@ preset is not "locked", it just moves the controls.
   current peak in dBFS.
 - **Scope** — expands or collapses the oscilloscope, which appears just below the buttons.
   The window grows and shrinks to fit; the state is remembered between runs.
-- **Guide** — opens this guide.
+- **Guide** — opens this guide. Its window is resizable and remembers its own text size:
+  press **Ctrl +** / **Ctrl -** to zoom the text in or out, and **Ctrl 0** to reset it.
 - **Settings** — opens the audio-device settings and the soft limiter.
 
 ### Oscilloscope
@@ -79,12 +78,16 @@ the signal is being clipped by the limiter. Toggle it with the **Scope** button.
 ### Master
 
 - **Level** — overall output loudness, applied after the tone and noise are summed.
+- **Balance** — shifts the master output between the left and right speakers. Centred (**C**)
+  leaves both channels untouched; dragging it toward one side fades out the other one, down to
+  full silence at the extreme. Double-click to snap back to centre.
 
 ### Session timer
 
 An optional sleep-timer: play for a set time, then fade out and stop automatically. The
-clock icon in the transport bar shows or hides this section; like the oscilloscope, the
-window grows and shrinks to fit and the state is remembered between runs.
+clock icon in the transport bar shows or hides this section, and the window grows and
+shrinks to fit — unlike the oscilloscope, this section always starts collapsed when you
+open the app.
 
 - **Duration** — how long the session lasts, in minutes.
 - **Fade in** — how many seconds it takes to rise from silence to your master **Level** when
@@ -131,5 +134,7 @@ Changes here are saved and restored automatically.
 - Keep the limiter on and leave headroom on the master, so bringing a level up never jumps
   to a harsh peak.
 - **Save** a mix you like so you can come back to it; delete the ones that don't work.
+
+The installed version is shown at the bottom of the main window.
 
 This app is a personal tool, not a medical device.

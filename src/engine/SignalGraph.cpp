@@ -5,6 +5,7 @@
 #include "dsp/NoiseColour.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 
 namespace noisefield::engine
@@ -14,12 +15,23 @@ namespace
 {
 constexpr double kMasterRampSeconds = 0.02;
 constexpr double kLayerRampSeconds = 0.04; // add/remove crossfades stay inaudible
+constexpr float kHalfPi = 1.5707963267948966f;
 
 dsp::NoiseColour colourFromIndex(int index) noexcept
 {
     if (index >= 0 && index < static_cast<int>(dsp::kNoiseColours.size()))
         return dsp::kNoiseColours[static_cast<std::size_t>(index)];
     return dsp::NoiseColour::White;
+}
+
+/// Classic hi-fi "balance" law: centred (0) leaves both channels at unity gain -- identical
+/// to the signal before this control existed -- and moving to one side tapers the *other*
+/// channel down with an equal-power (cosine) curve, silencing it fully at +-1.
+void balanceGains(float balance, float& leftGain, float& rightGain) noexcept
+{
+    balance = std::clamp(balance, -1.0f, 1.0f);
+    leftGain = balance <= 0.0f ? 1.0f : std::cos(balance * kHalfPi);
+    rightGain = balance >= 0.0f ? 1.0f : std::cos(-balance * kHalfPi);
 }
 } // namespace
 
@@ -51,6 +63,11 @@ void SignalGraph::prepare(double sampleRate, int maxBlockSize)
 
     masterGain_.prepare(sampleRate, kMasterRampSeconds);
     masterGain_.setCurrentAndTarget(0.0f);
+
+    leftBalanceGain_.prepare(sampleRate, kMasterRampSeconds);
+    leftBalanceGain_.setCurrentAndTarget(1.0f);
+    rightBalanceGain_.prepare(sampleRate, kMasterRampSeconds);
+    rightBalanceGain_.setCurrentAndTarget(1.0f);
 
     scope_.reset();
     scratch_.assign(static_cast<std::size_t>(std::max(maxBlockSize, 0)), 0.0f);
@@ -145,10 +162,9 @@ void SignalGraph::process(float* const* outputChannels,
     // that SignalGraph itself stays free of any framework dependency.
     const bool playing = params_.playing.load(std::memory_order_relaxed);
     const bool limiterOn = params_.limiterEnabled.load(std::memory_order_relaxed);
-    const bool masterOn = playing && !params_.masterMute.load(std::memory_order_relaxed);
 
     masterGain_.setTarget(
-        masterOn ? dsp::dbToGain(params_.masterGainDb.load(std::memory_order_relaxed)) : 0.0f);
+        playing ? dsp::dbToGain(params_.masterGainDb.load(std::memory_order_relaxed)) : 0.0f);
 
     const int frames = std::min(numSamples, static_cast<int>(scratch_.size()));
 
@@ -164,16 +180,40 @@ void SignalGraph::process(float* const* outputChannels,
         scratch_[static_cast<std::size_t>(i)] = sample;
     }
 
+    float leftBalanceTarget = 1.0f;
+    float rightBalanceTarget = 1.0f;
+    balanceGains(params_.masterBalance.load(std::memory_order_relaxed),
+                 leftBalanceTarget,
+                 rightBalanceTarget);
+    leftBalanceGain_.setTarget(leftBalanceTarget);
+    rightBalanceGain_.setTarget(rightBalanceTarget);
+
     for (int channel = 0; channel < numOutputChannels; ++channel)
     {
         if (auto* out = outputChannels[channel])
         {
-            std::copy(scratch_.begin(), scratch_.begin() + frames, out);
+            if (channel == 0)
+            {
+                for (int i = 0; i < frames; ++i)
+                    out[i] = scratch_[static_cast<std::size_t>(i)] * leftBalanceGain_.nextValue();
+            }
+            else if (channel == 1)
+            {
+                for (int i = 0; i < frames; ++i)
+                    out[i] = scratch_[static_cast<std::size_t>(i)] * rightBalanceGain_.nextValue();
+            }
+            else
+            {
+                std::copy(scratch_.begin(), scratch_.begin() + frames, out);
+            }
+
             if (frames < numSamples)
                 std::fill(out + frames, out + numSamples, 0.0f);
         }
     }
 
+    // Meter and scope read the pre-balance master bus, not the per-channel output, so panning
+    // hard to one side doesn't make the level meter look like it dropped.
     publishLevel(scratch_.data(), frames);
     scope_.write(scratch_.data(), frames);
 }

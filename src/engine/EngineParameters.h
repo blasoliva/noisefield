@@ -46,8 +46,8 @@ struct EngineParameters
 {
     // Transport / master
     std::atomic<bool> playing{false};
-    std::atomic<bool> masterMute{false};
     std::atomic<float> masterGainDb{-6.0f};
+    std::atomic<float> masterBalance{0.0f}; // -1 (full left) .. 0 (centre) .. +1 (full right)
     std::atomic<bool> limiterEnabled{true};
 
     // Layer pool

@@ -42,7 +42,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout NoisefieldAudioProcessor::ma
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     layout.add(std::make_unique<AF>(
         juce::ParameterID{"masterGainDb", 1}, "Master level", gainDbRange(), -6.0f));
-    layout.add(std::make_unique<AB>(juce::ParameterID{"masterMute", 1}, "Master mute", false));
+    layout.add(std::make_unique<AF>(juce::ParameterID{"masterBalance", 1},
+                                    "Master balance",
+                                    juce::NormalisableRange<float>{-1.0f, 1.0f},
+                                    0.0f));
     layout.add(std::make_unique<AB>(juce::ParameterID{"limiter", 1}, "Soft limiter", true));
     layout.add(std::make_unique<AB>(juce::ParameterID{"toneEnabled", 1}, "Tone enabled", true));
     layout.add(std::make_unique<AF>(
@@ -63,7 +66,7 @@ NoisefieldAudioProcessor::NoisefieldAudioProcessor()
       apvts_(*this, nullptr, "PARAMETERS", makeParameterLayout())
 {
     masterGainDb_ = apvts_.getRawParameterValue("masterGainDb");
-    masterMute_ = apvts_.getRawParameterValue("masterMute");
+    masterBalance_ = apvts_.getRawParameterValue("masterBalance");
     limiter_ = apvts_.getRawParameterValue("limiter");
     toneEnabled_ = apvts_.getRawParameterValue("toneEnabled");
     toneFrequencyHz_ = apvts_.getRawParameterValue("toneFrequencyHz");
@@ -105,7 +108,7 @@ void NoisefieldAudioProcessor::syncParametersToGraph() noexcept
 {
     auto& p = graph_.parameters();
     p.masterGainDb.store(masterGainDb_->load(), std::memory_order_relaxed);
-    p.masterMute.store(masterMute_->load() > 0.5f, std::memory_order_relaxed);
+    p.masterBalance.store(masterBalance_->load(), std::memory_order_relaxed);
     p.limiterEnabled.store(limiter_->load() > 0.5f, std::memory_order_relaxed);
 
     auto& tone = p.layer(kToneLayer);

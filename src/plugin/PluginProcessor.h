@@ -92,7 +92,7 @@ private:
     juce::AudioProcessorValueTreeState apvts_;
 
     std::atomic<float>* masterGainDb_ = nullptr;
-    std::atomic<float>* masterMute_ = nullptr;
+    std::atomic<float>* masterBalance_ = nullptr;
     std::atomic<float>* limiter_ = nullptr;
     std::atomic<float>* toneEnabled_ = nullptr;
     std::atomic<float>* toneFrequencyHz_ = nullptr;

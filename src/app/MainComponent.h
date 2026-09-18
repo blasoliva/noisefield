@@ -59,7 +59,6 @@ private:
     engine::AudioEngine engine_;
 
     juce::TextButton playButton_{"Play"};
-    juce::TextButton masterMuteButton_{"Mute"};
     gui::IconButton scopeButton_{gui::icons::scope};
     gui::IconButton timerButton_{gui::icons::timer};
     gui::IconButton guideButton_{gui::icons::guide};
@@ -97,6 +96,7 @@ private:
     gui::SectionCard masterCard_;
     juce::Label masterHeading_;
     juce::Slider masterGainSlider_;
+    juce::Slider masterBalanceSlider_;
 
     gui::SectionCard sessionCard_;
     juce::Label sessionHeading_;
@@ -107,9 +107,11 @@ private:
     juce::Label sessionStatusLabel_;
 
     juce::Label statusLabel_;
+    juce::Label versionLabel_;
 
     bool scopeExpanded_ = false;
     bool timerExpanded_ = false;
+    float guideZoom_ = 1.0f;
 
     bool sessionRunning_ = false;
     double sessionElapsedSeconds_ = 0.0;

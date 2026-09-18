@@ -26,8 +26,8 @@ struct Preset
     double noiseGainDb = -20.0;
     std::uint64_t noiseSeed = 1;
 
-    bool masterMute = false;
     double masterGainDb = -6.0;
+    double masterBalance = 0.0; // -1 (full left) .. 0 (centre) .. +1 (full right)
     bool limiterEnabled = true;
 };
 

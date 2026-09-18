@@ -1,5 +1,6 @@
 #include "app/MainComponent.h"
 
+#include "core/BuildInfo.h"
 #include "dsp/Constants.h"
 #include "dsp/NoiseColour.h"
 #include "gui/DetachedWindow.h"
@@ -8,6 +9,7 @@
 #include "model/PresetJson.h"
 
 #include <algorithm>
+#include <cmath>
 #include <initializer_list>
 #include <memory>
 
@@ -23,9 +25,10 @@ constexpr auto kNoiseGainKey = "noiseGainDb";
 constexpr auto kNoiseEnabledKey = "noiseEnabled";
 constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
+constexpr auto kMasterBalanceKey = "masterBalance";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
-constexpr auto kTimerExpandedKey = "timerExpanded";
+constexpr auto kGuideZoomKey = "guideZoom";
 constexpr auto kAudioStateKey = "audioDeviceState";
 constexpr auto kSessionDurationKey = "sessionDurationMinutes";
 constexpr auto kSessionFadeInKey = "sessionFadeInSeconds";
@@ -39,7 +42,7 @@ constexpr int kCardGap = 14;
 constexpr int kRowGap = 8;
 constexpr int kHeadGap = 10;
 
-constexpr int kBaseHeight = 616;       // window height, scope + session timer both collapsed
+constexpr int kBaseHeight = 682;       // window height, scope + session timer both collapsed
 constexpr int kScopeBlockHeight = 92;  // extra height when the scope is expanded
 constexpr int kTimerBlockHeight = 178; // extra height when the session timer is expanded
 
@@ -78,6 +81,35 @@ void configureGainSlider(juce::Slider& slider)
     slider.setRange(dsp::kMinGainDb, 0.0, 0.1);
     slider.setTextValueSuffix(" dB");
 }
+
+void configureBalanceSlider(juce::Slider& slider)
+{
+    // textFromValueFunction must be assigned before setTextBoxStyle(): that call triggers
+    // lookAndFeelChanged() synchronously, which creates the text box and formats its initial
+    // content right there -- too late for the lambda to affect it if assigned afterwards, and
+    // since the balance value never changes away from its 0.0 default on a fresh install,
+    // nothing else would ever refresh that stale text.
+    slider.textFromValueFunction = [](double v) -> juce::String
+    {
+        const int percent = static_cast<int>(std::round(std::abs(v) * 100.0));
+        if (percent == 0)
+            return "C";
+        return juce::String(percent) + (v < 0.0 ? "% L" : "% R");
+    };
+    slider.valueFromTextFunction = [](const juce::String& text) -> double
+    {
+        const auto trimmed = text.trim();
+        if (trimmed.equalsIgnoreCase("C"))
+            return 0.0;
+        const double magnitude = trimmed.retainCharacters("0123456789.").getDoubleValue() / 100.0;
+        return trimmed.containsIgnoreCase("L") ? -magnitude : magnitude;
+    };
+
+    slider.setSliderStyle(juce::Slider::LinearHorizontal);
+    slider.setRange(-1.0, 1.0, 0.01);
+    slider.setDoubleClickReturnValue(true, 0.0);
+    slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 22);
+}
 } // namespace
 
 MainComponent::MainComponent()
@@ -109,20 +141,9 @@ MainComponent::MainComponent()
         playButton_.setButtonText(on ? "Stop" : "Play");
     };
 
-    masterMuteButton_.setClickingTogglesState(true);
-    masterMuteButton_.onClick = [this]
-    {
-        const bool muted = masterMuteButton_.getToggleState();
-        params().masterMute.store(muted, std::memory_order_relaxed);
-        masterMuteButton_.setButtonText(muted ? "Muted" : "Mute");
-    };
-
-    // Toggled on, both read as "active": accent background, dark text so it stays legible.
-    for (auto* b : {&playButton_, &masterMuteButton_})
-    {
-        b->setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff5fc7ea));
-        b->setColour(juce::TextButton::textColourOnId, juce::Colour(0xff14161a));
-    }
+    // Toggled on (Stop), reads as "active": accent background, dark text so it stays legible.
+    playButton_.setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff5fc7ea));
+    playButton_.setColour(juce::TextButton::textColourOnId, juce::Colour(0xff14161a));
 
     scopeButton_.setTooltip("Oscilloscope");
     scopeButton_.setClickingTogglesState(true);
@@ -252,6 +273,13 @@ MainComponent::MainComponent()
                                     std::memory_order_relaxed);
     };
 
+    configureBalanceSlider(masterBalanceSlider_);
+    masterBalanceSlider_.onValueChange = [this]
+    {
+        params().masterBalance.store(static_cast<float>(masterBalanceSlider_.getValue()),
+                                     std::memory_order_relaxed);
+    };
+
     styleHeading(sessionHeading_, "Session timer");
 
     sessionDurationSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
@@ -284,6 +312,11 @@ MainComponent::MainComponent()
     statusLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
     statusLabel_.setJustificationType(juce::Justification::centredLeft);
 
+    versionLabel_.setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
+    versionLabel_.setJustificationType(juce::Justification::centred);
+    versionLabel_.setFont(juce::Font(juce::FontOptions(11.0f)));
+    versionLabel_.setText(juce::String(buildInfoString()), juce::dontSendNotification);
+
     for (auto* label : {&rateLabel_, &peakLabel_, &xrunsLabel_})
         label->setColour(juce::Label::textColourId, juce::Colour(0xff9aa0a6));
     rateLabel_.setJustificationType(juce::Justification::centredLeft);
@@ -298,7 +331,6 @@ MainComponent::MainComponent()
         statusLabel_.setText("Audio error: " + error, juce::dontSendNotification);
 
     for (juce::Component* c : std::initializer_list<juce::Component*>{&playButton_,
-                                                                      &masterMuteButton_,
                                                                       &scopeButton_,
                                                                       &timerButton_,
                                                                       &guideButton_,
@@ -307,6 +339,7 @@ MainComponent::MainComponent()
                                                                       &oscilloscope_,
                                                                       &meter_,
                                                                       &statusLabel_,
+                                                                      &versionLabel_,
                                                                       &rateLabel_,
                                                                       &peakLabel_,
                                                                       &xrunsLabel_,
@@ -329,6 +362,7 @@ MainComponent::MainComponent()
                                                                       &masterCard_,
                                                                       &masterHeading_,
                                                                       &masterGainSlider_,
+                                                                      &masterBalanceSlider_,
                                                                       &sessionCard_,
                                                                       &sessionHeading_,
                                                                       &sessionDurationSlider_,
@@ -417,9 +451,13 @@ void MainComponent::openGuideWindow()
         guideWindow_->toFront(true);
         return;
     }
-    guideWindow_ = std::make_unique<gui::DetachedWindow>(uiString("Noisefield — Guide"),
-                                                         std::make_unique<gui::GuideView>(),
-                                                         [this] { guideWindow_.reset(); });
+    auto guideView = std::make_unique<gui::GuideView>(guideZoom_);
+    guideView->onZoomChanged = [this](float zoom)
+    {
+        guideZoom_ = zoom;
+    };
+    guideWindow_ = std::make_unique<gui::DetachedWindow>(
+        uiString("Noisefield — Guide"), std::move(guideView), [this] { guideWindow_.reset(); });
 }
 
 void MainComponent::loadSettings()
@@ -439,12 +477,18 @@ void MainComponent::loadSettings()
                                   juce::dontSendNotification);
     masterGainSlider_.setValue(store->getDoubleValue(kMasterGainKey, params().masterGainDb.load()),
                                juce::dontSendNotification);
+    masterBalanceSlider_.setValue(
+        store->getDoubleValue(kMasterBalanceKey, params().masterBalance.load()),
+        juce::dontSendNotification);
 
     params().limiterEnabled.store(store->getBoolValue(kLimiterKey, params().limiterEnabled.load()),
                                   std::memory_order_relaxed);
 
     scopeExpanded_ = store->getBoolValue(kScopeExpandedKey, false);
-    timerExpanded_ = store->getBoolValue(kTimerExpandedKey, false);
+    guideZoom_ = static_cast<float>(store->getDoubleValue(kGuideZoomKey, 1.0));
+    // Unlike the scope, the session timer panel always starts collapsed — it's a one-off
+    // control you set up per session, not a persistent view preference.
+    timerExpanded_ = false;
 
     sessionDurationSlider_.setValue(store->getDoubleValue(kSessionDurationKey, 30.0),
                                     juce::dontSendNotification);
@@ -465,9 +509,10 @@ void MainComponent::saveSettings()
     store->setValue(kNoiseEnabledKey, noiseEnableButton_.getToggleState());
     store->setValue(kNoiseColourKey, noiseColourBox_.getSelectedId() - 1);
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
+    store->setValue(kMasterBalanceKey, masterBalanceSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
     store->setValue(kScopeExpandedKey, scopeExpanded_);
-    store->setValue(kTimerExpandedKey, timerExpanded_);
+    store->setValue(kGuideZoomKey, static_cast<double>(guideZoom_));
 
     store->setValue(kSessionDurationKey, sessionDurationSlider_.getValue());
     store->setValue(kSessionFadeInKey, sessionFadeInSlider_.getValue());
@@ -492,8 +537,8 @@ void MainComponent::applyPreset(const model::Preset& preset)
     noiseEnableButton_.setToggleState(preset.noiseEnabled, juce::sendNotification);
     noiseColourBox_.setSelectedId(colourIndex + 1, juce::sendNotification);
     noiseGainSlider_.setValue(preset.noiseGainDb, juce::sendNotification);
-    masterMuteButton_.setToggleState(preset.masterMute, juce::sendNotification);
     masterGainSlider_.setValue(preset.masterGainDb, juce::sendNotification);
+    masterBalanceSlider_.setValue(preset.masterBalance, juce::sendNotification);
     params().limiterEnabled.store(preset.limiterEnabled, std::memory_order_relaxed);
 }
 
@@ -508,8 +553,8 @@ model::Preset MainComponent::readState()
         0, static_cast<int>(dsp::kNoiseColours.size()) - 1, noiseColourBox_.getSelectedId() - 1))];
     preset.noiseGainDb = noiseGainSlider_.getValue();
     preset.noiseSeed = params().layer(kNoiseLayer).seed.load(std::memory_order_relaxed);
-    preset.masterMute = masterMuteButton_.getToggleState();
     preset.masterGainDb = masterGainSlider_.getValue();
+    preset.masterBalance = masterBalanceSlider_.getValue();
     preset.limiterEnabled = params().limiterEnabled.load(std::memory_order_relaxed);
     return preset;
 }
@@ -780,8 +825,6 @@ void MainComponent::resized()
 
     auto transport = area.removeFromTop(30);
     playButton_.setBounds(transport.removeFromLeft(80));
-    transport.removeFromLeft(8);
-    masterMuteButton_.setBounds(transport.removeFromLeft(80));
     settingsButton_.setBounds(transport.removeFromRight(40));
     transport.removeFromRight(6);
     guideButton_.setBounds(transport.removeFromRight(40));
@@ -852,10 +895,12 @@ void MainComponent::resized()
 
     // ---- Master ----
     {
-        auto inner = takeCard(area, masterCard_, 22 + kHeadGap + 28);
+        auto inner = takeCard(area, masterCard_, 22 + kHeadGap + 28 + kRowGap + 28);
         masterHeading_.setBounds(inner.removeFromTop(22));
         inner.removeFromTop(kHeadGap);
         masterGainSlider_.setBounds(inner.removeFromTop(28));
+        inner.removeFromTop(kRowGap);
+        masterBalanceSlider_.setBounds(inner.removeFromTop(28));
     }
 
     // ---- Session timer (collapsible, via the Timer button) ----
@@ -881,6 +926,10 @@ void MainComponent::resized()
             sessionStatusLabel_.setBounds(row);
         }
     }
+
+    // ---- Footer: app version, always visible regardless of scope/timer state ----
+    area.removeFromTop(kCardGap);
+    versionLabel_.setBounds(area.removeFromTop(16));
 }
 
 } // namespace noisefield::app
