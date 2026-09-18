@@ -177,6 +177,11 @@ balance control.
   `noisefield::buildInfoString()` (`src/core/BuildInfo.h`, currently unused outside tests).
   Bump `kBaseHeight` in `MainComponent.cpp` to make room.
 
+**Pending:** `docs/images/preset-menu.png` still shows the old **Mute** button (removed in
+NF-100) in the background — regenerating it needs the preset combo box's dropdown open, which
+needs a simulated click; no UI-automation tool (e.g. `xdotool`) was available in the sandbox
+this milestone was built in. Retake it on a real machine.
+
 ---
 
 ## Icebox (post-M4, no milestone)
