@@ -10,7 +10,6 @@ messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 ### Documentation
 
 * note preset-menu.png still needs a retake ([#18](https://github.com/blasoliva/noisefield/issues/18)) ([6683774](https://github.com/blasoliva/noisefield/commit/6683774752d777acb6edf8bd7ba28300cd8a06c7))
-* retake preset-menu.png without the old Mute button ([4138045](https://github.com/blasoliva/noisefield/commit/4138045b3dd06e043bf6f3a6591114e25eed3a97))
 * retake preset-menu.png without the old Mute button ([d3d1b30](https://github.com/blasoliva/noisefield/commit/d3d1b303088e2143340e4184cad368b29a5b60e3))
 
 ## [0.5.0](https://github.com/blasoliva/noisefield/compare/v0.4.1...v0.5.0) (2026-09-18)
