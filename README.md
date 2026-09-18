@@ -9,10 +9,11 @@ A native Linux desktop app to generate tones across a frequency range and mix di
 types of noise (white, pink, brown, blue, violet, grey) into layered sound fields. The
 [user guide](docs/guide.md) explains what each control does.
 
-I have tinnitus, and playing certain tones and noise blends through this app relieves the
-sensation for me at times — that is why it exists.
-
 **Disclaimer: this is a personal tool, not a medical device.**
+
+I have tinnitus, and playing certain tones and noise blends through this app relieves the
+sensation for me at times — that is why it exists. Start at a low volume and raise it
+gradually: tones and noise played too loud, for too long, can damage your hearing.
 
 Noisefield is built 100% AI-assisted.
 
@@ -45,9 +46,11 @@ the VST3 / LV2 / CLAP plugins. To build from source instead, see below.
 </p>
 
 <p align="center">
-  <img src="docs/images/main-scope.png" alt="Noisefield with the oscilloscope expanded" width="440"><br>
+  <img src="docs/images/main-scope.png" alt="Noisefield with the oscilloscope and session timer expanded" width="440"><br>
   <em>The waveform icon expands a master-output oscilloscope in place, aligned to a rising
-  zero-crossing; the window resizes to fit.</em>
+  zero-crossing, and the clock icon expands the session timer (shown here too); either panel
+  resizes the window to fit. Master also has a <strong>Balance</strong> fader, centred by
+  default, that shifts the output between the left and right speakers.</em>
 </p>
 
 <p align="center">
