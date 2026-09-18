@@ -13,7 +13,7 @@ See context and technical rationale in [`plan.md`](plan.md).
 | **M2** | Audible MVP | Generate a frequency + white noise and mix them | Phase 1 — ✅ code done |
 | **M3** | Noisefield | Multi-layer engine, all noise colors, presets | Phase 2 — ✅ done |
 | **M4** | Tools and distribution | Session timer, JACK support, user manual, AppImage | Phases 3–4 — ✅ done |
-| **M5** | UI polish round | Transport cleanup, session-timer startup state, Guide window fixes, master balance, version footer | Phase 5 — [ ] pending |
+| **M5** | UI polish round | Transport cleanup, session-timer startup state, Guide window fixes, master balance, version footer | Phase 5 — [~] implemented, pending on-device Guide-window check (NF-102) |
 
 ---
 
