@@ -4,6 +4,35 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.5.0](https://github.com/blasoliva/noisefield/compare/v0.4.1...v0.5.0) (2026-09-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **app:** the plugin no longer exposes a "Master mute" automation parameter; host automation lanes on it will no longer do anything.
+
+### Features
+
+* **app:** remove the Master Mute button ([30c0b95](https://github.com/blasoliva/noisefield/commit/30c0b951141e2f8d5f9f02b55b67fc334ea15647))
+* **app:** show the app version in a footer on the main window ([ae842a8](https://github.com/blasoliva/noisefield/commit/ae842a86486a770e6a2af0706c297e474cb2eccc))
+* **engine,app,plugin:** add a master L/R balance control ([c40e266](https://github.com/blasoliva/noisefield/commit/c40e266dfb5b59531f4ca8875ea6ba10dfacbb3f))
+* **gui:** add Ctrl +/- text zoom to the Guide window ([2f83689](https://github.com/blasoliva/noisefield/commit/2f83689b32101ace90694f5b649d90fc584b4d94))
+* M5 UI polish round (transport, timer, Guide, master balance, version footer) ([4b976dc](https://github.com/blasoliva/noisefield/commit/4b976dcdf32b4e2fc961607a5cc43cff5a422bc3))
+
+
+### Bug Fixes
+
+* **app:** always start the session timer panel collapsed ([56ee729](https://github.com/blasoliva/noisefield/commit/56ee729cd48d1e2c7381d5fd3a11ef1c5b2fc2e8))
+* **gui:** always request minimise/maximise on detached windows (BUG-002) ([db794c9](https://github.com/blasoliva/noisefield/commit/db794c9679fea7dd8fd615dd9ebaa31061d6ce29))
+
+
+### Documentation
+
+* add M5 UI polish round to the backlog ([0b7467d](https://github.com/blasoliva/noisefield/commit/0b7467d20b7f2f80cb4e607a09a233e3151d5555))
+* close out M5 -- BUG-002/NF-102 verified on Ubuntu and Debian ([a20b12e](https://github.com/blasoliva/noisefield/commit/a20b12eaf5eb1a1226890c96d4cbd7f2e2aeabdd))
+* lead with the disclaimer, add a volume warning, refresh screenshots ([cde2ee4](https://github.com/blasoliva/noisefield/commit/cde2ee40b7f4168f69bf571feb630a4babb865fa))
+* mark M5 implemented, pending on-device Guide-window check ([273673c](https://github.com/blasoliva/noisefield/commit/273673c2b0a4af77e214b6497db5f06d3408ca8a))
+
 ## [0.4.1](https://github.com/blasoliva/noisefield/compare/v0.4.0...v0.4.1) (2026-09-12)
 
 
