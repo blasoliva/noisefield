@@ -150,7 +150,7 @@ balance control.
   keeping in-session toggle-via-click behaviour unchanged.
 - [~] **NF-102** (S) **BUG-002** fix: see the *Bugs to resolve* entry below — the Guide/Settings
   window's minimize/maximize decorations should always be visible and functional.
-- [ ] **NF-103** (M) Guide window: text is too small to read comfortably and has no way to
+- [x] **NF-103** (M) Guide window: text is too small to read comfortably and has no way to
   resize. Add zoom in/out bound to **Ctrl +** / **Ctrl -** (and ideally **Ctrl 0** to reset),
   scaling every font size in `gui::GuideView::Page::build()` by a stored factor and
   re-laying-out; no UI button required. Consider persisting the chosen zoom level alongside

@@ -109,6 +109,7 @@ private:
 
     bool scopeExpanded_ = false;
     bool timerExpanded_ = false;
+    float guideZoom_ = 1.0f;
 
     bool sessionRunning_ = false;
     double sessionElapsedSeconds_ = 0.0;

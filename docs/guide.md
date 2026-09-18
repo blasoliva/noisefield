@@ -42,7 +42,8 @@ preset is not "locked", it just moves the controls.
   current peak in dBFS.
 - **Scope** — expands or collapses the oscilloscope, which appears just below the buttons.
   The window grows and shrinks to fit; the state is remembered between runs.
-- **Guide** — opens this guide.
+- **Guide** — opens this guide. Its window is resizable and remembers its own text size:
+  press **Ctrl +** / **Ctrl -** to zoom the text in or out, and **Ctrl 0** to reset it.
 - **Settings** — opens the audio-device settings and the soft limiter.
 
 ### Oscilloscope

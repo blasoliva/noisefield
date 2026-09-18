@@ -25,6 +25,7 @@ constexpr auto kNoiseColourKey = "noiseColour";
 constexpr auto kMasterGainKey = "masterGainDb";
 constexpr auto kLimiterKey = "limiterEnabled";
 constexpr auto kScopeExpandedKey = "scopeExpanded";
+constexpr auto kGuideZoomKey = "guideZoom";
 constexpr auto kAudioStateKey = "audioDeviceState";
 constexpr auto kSessionDurationKey = "sessionDurationMinutes";
 constexpr auto kSessionFadeInKey = "sessionFadeInSeconds";
@@ -386,9 +387,13 @@ void MainComponent::openGuideWindow()
         guideWindow_->toFront(true);
         return;
     }
-    guideWindow_ = std::make_unique<gui::DetachedWindow>(uiString("Noisefield — Guide"),
-                                                         std::make_unique<gui::GuideView>(),
-                                                         [this] { guideWindow_.reset(); });
+    auto guideView = std::make_unique<gui::GuideView>(guideZoom_);
+    guideView->onZoomChanged = [this](float zoom)
+    {
+        guideZoom_ = zoom;
+    };
+    guideWindow_ = std::make_unique<gui::DetachedWindow>(
+        uiString("Noisefield — Guide"), std::move(guideView), [this] { guideWindow_.reset(); });
 }
 
 void MainComponent::loadSettings()
@@ -413,6 +418,7 @@ void MainComponent::loadSettings()
                                   std::memory_order_relaxed);
 
     scopeExpanded_ = store->getBoolValue(kScopeExpandedKey, false);
+    guideZoom_ = static_cast<float>(store->getDoubleValue(kGuideZoomKey, 1.0));
     // Unlike the scope, the session timer panel always starts collapsed — it's a one-off
     // control you set up per session, not a persistent view preference.
     timerExpanded_ = false;
@@ -438,6 +444,7 @@ void MainComponent::saveSettings()
     store->setValue(kMasterGainKey, masterGainSlider_.getValue());
     store->setValue(kLimiterKey, params().limiterEnabled.load(std::memory_order_relaxed));
     store->setValue(kScopeExpandedKey, scopeExpanded_);
+    store->setValue(kGuideZoomKey, static_cast<double>(guideZoom_));
 
     store->setValue(kSessionDurationKey, sessionDurationSlider_.getValue());
     store->setValue(kSessionFadeInKey, sessionFadeInSlider_.getValue());

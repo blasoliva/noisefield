@@ -69,13 +69,22 @@ void appendInline(juce::AttributedString& out,
 }
 } // namespace
 
-GuideView::Page::Page(juce::String markdown) : source_(std::move(markdown)) {}
+GuideView::Page::Page(juce::String markdown, float initialZoom)
+    : source_(std::move(markdown)), zoom_(initialZoom)
+{
+}
+
+void GuideView::Page::setZoom(float zoom)
+{
+    zoom_ = zoom;
+    layoutForWidth(getWidth());
+}
 
 void GuideView::Page::build(float textWidth)
 {
     juce::AttributedString s;
     s.setWordWrap(juce::AttributedString::byWord);
-    s.setLineSpacing(2.5f);
+    s.setLineSpacing(2.5f * zoom_);
 
     const auto lines = juce::StringArray::fromLines(source_);
     bool first = true;
@@ -86,14 +95,15 @@ void GuideView::Page::build(float textWidth)
 
         if (line.isEmpty())
         {
-            s.append("\n", bodyFont(7.0f, false), kBody);
+            s.append("\n", bodyFont(7.0f * zoom_, false), kBody);
             continue;
         }
 
         auto heading = [&](int prefixLength, float size)
         {
+            size *= zoom_;
             if (!first)
-                s.append("\n", bodyFont(8.0f, false), kBody);
+                s.append("\n", bodyFont(8.0f * zoom_, false), kBody);
             appendInline(s, line.substring(prefixLength), size, kHeading, true);
             s.append("\n", bodyFont(size, true), kHeading);
         };
@@ -105,17 +115,18 @@ void GuideView::Page::build(float textWidth)
         else if (line.startsWith("# "))
             heading(2, 21.0f);
         else if (line == "---" || line == "***")
-            s.append("\n", bodyFont(8.0f, false), kBody);
+            s.append("\n", bodyFont(8.0f * zoom_, false), kBody);
         else if (line.startsWith("- ") || line.startsWith("* "))
         {
-            s.append(juce::String::fromUTF8("  \xe2\x80\xa2  "), bodyFont(13.0f, false), kBody);
-            appendInline(s, line.substring(2), 13.0f, kBody, false);
-            s.append("\n", bodyFont(13.0f, false), kBody);
+            s.append(
+                juce::String::fromUTF8("  \xe2\x80\xa2  "), bodyFont(13.0f * zoom_, false), kBody);
+            appendInline(s, line.substring(2), 13.0f * zoom_, kBody, false);
+            s.append("\n", bodyFont(13.0f * zoom_, false), kBody);
         }
         else
         {
-            appendInline(s, line, 13.0f, kBody, false);
-            s.append("\n", bodyFont(13.0f, false), kBody);
+            appendInline(s, line, 13.0f * zoom_, kBody, false);
+            s.append("\n", bodyFont(13.0f * zoom_, false), kBody);
         }
 
         first = false;
@@ -141,9 +152,12 @@ void GuideView::Page::paint(juce::Graphics& g)
                                         static_cast<float>(getHeight()) - 2.0f * margin_));
 }
 
-GuideView::GuideView()
-    : page_(juce::String::fromUTF8(BinaryData::guide_md, BinaryData::guide_mdSize))
+GuideView::GuideView(float initialZoom)
+    : page_(juce::String::fromUTF8(BinaryData::guide_md, BinaryData::guide_mdSize),
+            juce::jlimit(kMinZoom, kMaxZoom, initialZoom)),
+      zoom_(juce::jlimit(kMinZoom, kMaxZoom, initialZoom))
 {
+    setWantsKeyboardFocus(true);
     viewport_.setViewedComponent(&page_, false);
     viewport_.setScrollBarsShown(true, false);
     addAndMakeVisible(viewport_);
@@ -154,6 +168,46 @@ void GuideView::resized()
 {
     viewport_.setBounds(getLocalBounds());
     page_.layoutForWidth(viewport_.getMaximumVisibleWidth());
+}
+
+void GuideView::visibilityChanged()
+{
+    if (isVisible())
+        grabKeyboardFocus();
+}
+
+bool GuideView::keyPressed(const juce::KeyPress& key)
+{
+    if (!key.getModifiers().isCtrlDown())
+        return false;
+
+    constexpr float kZoomStep = 1.15f;
+    const auto c = key.getTextCharacter();
+
+    if (c == '+' || c == '=')
+    {
+        applyZoom(juce::jmin(zoom_ * kZoomStep, kMaxZoom));
+        return true;
+    }
+    if (c == '-')
+    {
+        applyZoom(juce::jmax(zoom_ / kZoomStep, kMinZoom));
+        return true;
+    }
+    if (c == '0')
+    {
+        applyZoom(1.0f);
+        return true;
+    }
+    return false;
+}
+
+void GuideView::applyZoom(float zoom)
+{
+    zoom_ = zoom;
+    page_.setZoom(zoom_);
+    if (onZoomChanged)
+        onZoomChanged(zoom_);
 }
 
 } // namespace noisefield::gui
