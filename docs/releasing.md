@@ -42,3 +42,15 @@ Release PR's version (or its title) to `1.0.0` and merge, or land a commit with 
   merge it once the normal CI on the feature PRs was green.
 - The tag/version scheme and the workflow live in `release-please-config.json`,
   `.release-please-manifest.json` and `.github/workflows/release.yml`.
+
+## If the build/publish step gets skipped
+
+The `publish` job only runs when release-please reports `release_created == 'true'` on the push
+that merges the Release PR. That output has come back empty at least once (v0.5.1) even though
+the tag and GitHub Release were created fine — cause unconfirmed, but the release ends up with
+no `.deb`/AppImage/plugin tarball attached. Check the release's assets on GitHub if you're not
+sure it ran.
+
+To backfill it: **Actions → Release → Run workflow**, and give it the existing tag (e.g.
+`v0.5.1`) in the `tag` input. This runs the `publish` job alone against that tag, independent of
+release-please — safe to re-run any time, it just rebuilds and re-attaches the artefacts.

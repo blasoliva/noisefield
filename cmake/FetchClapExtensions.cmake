@@ -11,6 +11,6 @@ FetchContent_Declare(clap-juce-extensions
     GIT_REPOSITORY https://github.com/free-audio/clap-juce-extensions.git
     GIT_TAG ${NOISEFIELD_CLAP_EXT_TAG}
     GIT_SUBMODULES_RECURSE TRUE
-    GIT_SHALLOW TRUE)
+    GIT_SHALLOW FALSE)
 
 FetchContent_MakeAvailable(clap-juce-extensions)

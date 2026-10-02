@@ -4,10 +4,23 @@ name: Release
 # standing "Release PR" that bumps the version and CHANGELOG.md; merging that PR creates the
 # vX.Y.Z tag and the GitHub Release, and the `publish` job below builds the Linux artefacts
 # and attaches them. See docs/releasing.md.
+#
+# The publish job is gated on release-please reporting release_created == 'true', which has
+# occasionally come back empty even though the release/tag was created (seen on v0.5.1 -- cause
+# unconfirmed). workflow_dispatch below is the manual escape hatch: give it an existing tag to
+# (re)build and attach artefacts for, bypassing release-please entirely.
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: >-
+          Existing release tag to (re)build and publish artefacts for (e.g. v0.5.1) -- use this
+          to backfill a release whose automatic publish job was skipped.
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -17,6 +30,7 @@ permissions:
 jobs:
   release-please:
     name: Maintain the release PR
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.rp.outputs.release_created }}
@@ -32,11 +46,28 @@ jobs:
   publish:
     name: Build and publish (Linux x86_64)
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: |
+      !failure() && !cancelled() && (
+        (github.event_name == 'push' && needs.release-please.outputs.release_created == 'true') ||
+        github.event_name == 'workflow_dispatch'
+      )
     # Older Ubuntu -> older glibc -> the AppImage / .deb run on more systems.
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.sha }}
+
+      - name: Resolve tag and version
+        id: release
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${{ needs.release-please.outputs.tag_name }}"
+          fi
+          echo "tag_name=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
       - name: Install system dependencies
         run: |
@@ -59,7 +90,7 @@ jobs:
           cmake -B build -G Ninja
           -DCMAKE_BUILD_TYPE=Release
           -DNOISEFIELD_BUILD_PLUGIN=ON
-          -DNOISEFIELD_VERSION=${{ needs.release-please.outputs.version }}
+          -DNOISEFIELD_VERSION=${{ steps.release.outputs.version }}
 
       - name: Build
         run: cmake --build build
@@ -81,7 +112,7 @@ jobs:
             https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage
           chmod +x linuxdeploy*.AppImage
           export APPIMAGE_EXTRACT_AND_RUN=1
-          export OUTPUT="Noisefield-${{ needs.release-please.outputs.version }}-x86_64.AppImage"
+          export OUTPUT="Noisefield-${{ steps.release.outputs.version }}-x86_64.AppImage"
           ./linuxdeploy.AppImage --appdir AppDir \
             --desktop-file AppDir/usr/share/applications/noisefield.desktop \
             --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/noisefield.png \
@@ -90,14 +121,14 @@ jobs:
       - name: Package plugins
         run: |
           art=build/src/plugin/NoisefieldPlugin_artefacts/Release
-          tar czf "noisefield-plugins-${{ needs.release-please.outputs.version }}-linux-x64.tar.gz" \
+          tar czf "noisefield-plugins-${{ steps.release.outputs.version }}-linux-x64.tar.gz" \
             -C "$art" VST3 LV2 CLAP
 
       - name: Attach the built artefacts to the release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
-          prerelease: ${{ startsWith(needs.release-please.outputs.version, '0.') }}
+          tag_name: ${{ steps.release.outputs.tag_name }}
+          prerelease: ${{ startsWith(steps.release.outputs.version, '0.') }}
           files: |
             Noisefield-*-x86_64.AppImage
             noisefield_*.deb

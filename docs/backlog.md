@@ -275,6 +275,50 @@ throwaway venv, no root needed), against the app running under `Xvfb`. Two throw
     also silently defeat the release workflow's `-D` override). Left open for a deliberate fix
     rather than bundled into NF-105.
 
+- [~] **BUG-004** — the `publish` job in `.github/workflows/release.yml` was skipped for the
+  v0.5.1 release even though release-please created the tag/GitHub Release fine, leaving that
+  release with no `.deb`/AppImage/plugin tarball attached.
+  - **Symptom:** job conclusion was `skipped`, not `failure` — its gate is
+    `needs.release-please.outputs.release_created == 'true'`, which apparently evaluated falsy
+    on that run. `release-please-config.json` and `release.yml` were byte-identical to the
+    previous release (0.5.0), which published its artefacts fine, so this wasn't a config
+    regression on our side.
+  - **Cause unconfirmed** — couldn't pull the actual Action logs to confirm (`GET .../logs`
+    returns `403: Must have admin rights to Repository` for the MCP token even on this public
+    repo, and the REST API doesn't expose step output *values* after the fact, only
+    status/conclusion). Leading suspicion: a manual commit was pushed directly to the
+    `release-please--branches--main` branch between the PR being opened and merged (to dedupe a
+    changelog entry — see PR #19's history), bypassing release-please's own update path; that
+    may have left its internal bookkeeping in a state where it still created the release but
+    didn't surface `release_created=true` to the workflow.
+  - **Mitigation:** added a `workflow_dispatch` input (`tag`) to `release.yml` so `publish` can
+    be run standalone against an existing tag, independent of release-please — see
+    [`docs/releasing.md`](releasing.md#if-the-buildpublish-step-gets-skipped). Still need to
+    run it for v0.5.1 to attach its artefacts (not done as of this writing), and the root cause
+    above is still unconfirmed.
+  - **Takeaway:** avoid hand-editing the `release-please--branches--main` branch directly in the
+    future (e.g. to fix a changelog nit) now that it's a suspect — if a Release PR needs a
+    correction, prefer letting release-please regenerate it (a trivial new commit on `main`) over
+    pushing to its branch by hand, until this is root-caused.
+
+- [x] **BUG-005** — CI's `Configure` step started failing on `main` (and every PR) with
+  `fatal: reference is not a tree: 9fbefae3...` while fetching `clap-juce-extensions`.
+  - **Cause:** `cmake/FetchClapExtensions.cmake` pins an exact commit via `GIT_TAG` with
+    `GIT_SHALLOW TRUE`. That combination only works reliably while the pinned commit happens to
+    be the tip of the upstream default branch — a depth-1 shallow clone only fetches the
+    current tip, so once `free-audio/clap-juce-extensions` gained a new commit on top of ours
+    (`9fbefae3...` → `55525c9...`), the shallow fetch no longer brought our pinned commit's tree
+    object down, and `git checkout <sha>` failed outright. The commit itself was never removed
+    upstream — reachable fine via the GitHub API the whole time.
+  - **Fix:** `GIT_SHALLOW FALSE` (full clone) for this dependency only, same pinned commit.
+    Reproduced the exact CI `Configure`/`Build`/`Test`/plugin-artefact-check steps locally
+    first to confirm both the failure and the fix (53/53 tests, VST3/LV2/CLAP all present).
+  - **Note:** `cmake/FetchJUCE.cmake` and `cmake/FetchCatch2.cmake` use `GIT_SHALLOW TRUE` too,
+    but pin actual release tags (`8.0.15`, `v3.7.1`) rather than a raw commit SHA — tags are
+    immutable named refs GitHub always advertises directly, so they aren't exposed to this
+    failure mode. `clap-juce-extensions` is the only one pinned to a bare SHA even though the
+    upstream repo does publish version tags (e.g. `0.26.0`).
+
 ---
 
 ## Task dependencies (summary)
