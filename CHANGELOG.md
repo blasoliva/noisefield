@@ -4,6 +4,13 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.5.2](https://github.com/blasoliva/noisefield/compare/v0.5.1...v0.5.2) (2026-10-02)
+
+
+### Bug Fixes
+
+* **build:** stop shallow-cloning clap-juce-extensions by SHA ([a5e7473](https://github.com/blasoliva/noisefield/commit/a5e747369ff85102f5b70737090140f3504c3149))
+
 ## [0.5.1](https://github.com/blasoliva/noisefield/compare/v0.5.0...v0.5.1) (2026-09-18)
 
 
