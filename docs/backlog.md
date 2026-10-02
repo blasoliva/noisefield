@@ -275,42 +275,43 @@ throwaway venv, no root needed), against the app running under `Xvfb`. Two throw
     also silently defeat the release workflow's `-D` override). Left open for a deliberate fix
     rather than bundled into NF-105.
 
-- [~] **BUG-004** — the `publish` job in `.github/workflows/release.yml` was skipped for the
-  v0.5.1 release even though release-please created the tag/GitHub Release fine, leaving that
-  release with no `.deb`/AppImage/plugin tarball attached.
-  - **Symptom:** job conclusion was `skipped`, not `failure` — its gate is
-    `needs.release-please.outputs.release_created == 'true'`, which apparently evaluated falsy
-    on that run. `release-please-config.json` and `release.yml` were byte-identical to the
-    previous release (0.5.0), which published its artefacts fine, so this wasn't a config
-    regression on our side.
+- [~] **BUG-004** — the `publish` job in `.github/workflows/release.yml` intermittently gets
+  `skipped` even though release-please created the tag/GitHub Release fine, leaving that release
+  with no `.deb`/AppImage/plugin tarball attached (and incorrectly not marked as a prerelease —
+  see below). Seen on **v0.5.1** (PR #19) and **v0.5.3** (PR #24); **v0.5.2** (PR #22) published
+  normally in between, so this is intermittent, not every release.
+  - **Symptom:** job conclusion is `skipped`, not `failure` — its gate is
+    `needs.release-please.outputs.release_created == 'true'`, which apparently evaluates falsy
+    on the affected runs. `release-please-config.json` and `release.yml` were byte-identical
+    across all three releases, so it isn't a config regression on our side, and it isn't
+    triggered by any single reproducible action we took.
   - **Cause unconfirmed** — couldn't pull the actual Action logs to confirm (`GET .../logs`
     returns `403: Must have admin rights to Repository` for the MCP token even on this public
     repo, and the REST API doesn't expose step output *values* after the fact, only
-    status/conclusion). Leading suspicion: a manual commit was pushed directly to the
-    `release-please--branches--main` branch between the PR being opened and merged (to dedupe a
-    changelog entry — see PR #19's history), bypassing release-please's own update path; that
-    may have left its internal bookkeeping in a state where it still created the release but
-    didn't surface `release_created=true` to the workflow.
+    status/conclusion).
+  - **Leading theory disproven:** originally suspected a manual commit pushed directly to the
+    `release-please--branches--main` branch (done once, for v0.5.1's PR #19, to dedupe a
+    changelog entry) had confused the action's bookkeeping. v0.5.3 (PR #24) reproduced the exact
+    same skip with **no** manual edit to that branch anywhere in its cycle, which rules this out.
+    Root cause is still open — possibly a genuine intermittent issue in
+    `googleapis/release-please-action@v4` itself (floating `@v4` tag, so the exact version in
+    play isn't pinned or easily inspectable after the fact).
   - **Side effect:** since `publish` (specifically its `softprops/action-gh-release` step) never
-    ran, the release release-please created for v0.5.1 kept `prerelease: false` — the
-    `prerelease: startsWith(version, '0.')` flag is only ever applied by that step. A
-    `prerelease: false` 0.x release outranks every later, correctly-flagged 0.x prerelease for
-    GitHub's "Latest" badge, so v0.5.1 stayed "Latest" even after v0.5.2 shipped normally.
-  - **Mitigation:** added a `workflow_dispatch` input (`tag`) to `release.yml` so `publish` can
-    be run standalone against an existing tag, independent of release-please — see
-    [`docs/releasing.md`](releasing.md#if-the-buildpublish-step-gets-skipped). Re-running it for
-    v0.5.1 updates that same release in place (by tag name) and should fix both the missing
-    artefacts and the stale "Latest" flag in one shot, once the fix below lands.
-  - **The first version of that mitigation was itself broken:** it checked out the exact
-    historical `tag` to build from, so backfilling v0.5.1 hit `BUG-005` all over again (that tag
-    predates the clap-juce-extensions fix). Fixed by building from the triggering ref (current
-    `main`) on `workflow_dispatch` regardless of which tag is being backfilled — a backfill is
-    only ever needed because the build setup was broken *at tag time*, so it should always use
-    today's (working) infrastructure. The root cause of the original skip is still unconfirmed.
-  - **Takeaway:** avoid hand-editing the `release-please--branches--main` branch directly in the
-    future (e.g. to fix a changelog nit) now that it's a suspect — if a Release PR needs a
-    correction, prefer letting release-please regenerate it (a trivial new commit on `main`) over
-    pushing to its branch by hand, until this is root-caused.
+    ran, the release release-please created kept `prerelease: false` — that flag is only ever
+    applied by that step. A `prerelease: false` 0.x release outranks every later,
+    correctly-flagged 0.x prerelease for GitHub's "Latest" badge, so an affected release (e.g.
+    v0.5.1) stays "Latest" even after later releases ship normally.
+  - **Mitigation (confirmed working):** a `workflow_dispatch` input (`tag`) on `release.yml`
+    runs `publish` standalone against an existing tag, independent of release-please — see
+    [`docs/releasing.md`](releasing.md#if-the-buildpublish-step-gets-skipped). It updates that
+    release in place (by tag name), fixing both the missing artefacts and the stale "Latest"
+    flag in one run. Verified end to end on v0.5.1. The dispatch builds from `main`'s current
+    tip rather than the historical tag (fixed after an initial attempt hit `BUG-005` again,
+    since v0.5.1's tag predates that fix) — intentional, since a backfill is only ever needed
+    because *something* about the build/release setup was broken at tag time.
+  - **Standing procedure until root-caused:** after merging any release-please Release PR,
+    check the release's assets on GitHub. If `publish` was skipped, run the `workflow_dispatch`
+    backfill for that tag — don't assume it published just because the PR merged cleanly.
 
 - [x] **BUG-005** — CI's `Configure` step started failing on `main` (and every PR) with
   `fatal: reference is not a tree: 9fbefae3...` while fetching `clap-juce-extensions`.

@@ -46,11 +46,17 @@ Release PR's version (or its title) to `1.0.0` and merge, or land a commit with 
 ## If the build/publish step gets skipped
 
 The `publish` job only runs when release-please reports `release_created == 'true'` on the push
-that merges the Release PR. That output has come back empty at least once (v0.5.1) even though
-the tag and GitHub Release were created fine — cause unconfirmed, but the release ends up with
-no `.deb`/AppImage/plugin tarball attached. Check the release's assets on GitHub if you're not
-sure it ran.
+that merges the Release PR. That output has intermittently come back empty (v0.5.1, v0.5.3; cause
+unconfirmed — see `BUG-004` in `docs/backlog.md`) even though the tag and GitHub Release were
+created fine. Two visible symptoms: the release has no `.deb`/AppImage/plugin tarball attached,
+and it's stuck showing `prerelease: false` (only the `publish` step sets `prerelease: true` for
+0.x), which can make an old release outrank a newer one for GitHub's "Latest" badge.
+
+**After every merged Release PR, check the release's assets on GitHub** — don't assume
+`publish` ran just because the merge was clean.
 
 To backfill it: **Actions → Release → Run workflow**, and give it the existing tag (e.g.
-`v0.5.1`) in the `tag` input. This runs the `publish` job alone against that tag, independent of
-release-please — safe to re-run any time, it just rebuilds and re-attaches the artefacts.
+`v0.5.1`) in the `tag` input. This runs the `publish` job alone against that tag, building from
+`main`'s current tip (not the historical tag — see `BUG-004`/`BUG-005` in `docs/backlog.md`),
+independent of release-please — safe to re-run any time, it rebuilds and re-attaches the
+artefacts and fixes the prerelease flag on that release in place.
