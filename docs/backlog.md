@@ -331,6 +331,22 @@ throwaway venv, no root needed), against the app running under `Xvfb`. Two throw
     failure mode. `clap-juce-extensions` is the only one pinned to a bare SHA even though the
     upstream repo does publish version tags (e.g. `0.26.0`).
 
+- [ ] **BUG-006** — `docs/releasing.md`'s commit-type table says `docs:` (and `refactor:`,
+  `perf:`, `build:`) "shown in the changelog, no bump on their own", but that doesn't match what
+  release-please actually did in this repo: the **0.5.0 → 0.5.1** bump (PR #19) was produced by
+  **two `docs:` commits alone** (#18, #20) — no `fix:`/`feat:` in that release at all.
+  - Either the documented table is wrong about release-please's actual default behavior (a
+    patch bump for any non-hidden Conventional Commit type, not just `fix:`), or something in
+    `release-please-config.json`'s `changelog-sections` (only `ci`/`chore`/`test` are marked
+    `"hidden": true`; `docs`/`refactor`/`perf`/`build` are not) makes those types releasable too
+    despite the doc's claim.
+  - Worth a closer look — read release-please's actual versioning-strategy docs/source for the
+    `simple` release type, or just test deliberately (a lone `docs:` or `chore:` commit on a
+    clean state) and see whether a Release PR opens and whether it bumps the version. Fix
+    whichever side is wrong: either correct the table in `docs/releasing.md`, or adjust
+    `changelog-sections` so only `fix`/`feat`/breaking changes are releasable, matching the
+    documented intent.
+
 ---
 
 ## Task dependencies (summary)
