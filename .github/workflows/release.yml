@@ -54,9 +54,14 @@ jobs:
     # Older Ubuntu -> older glibc -> the AppImage / .deb run on more systems.
     runs-on: ubuntu-22.04
     steps:
+      # On workflow_dispatch, deliberately build from the triggering ref (main's current tip,
+      # left as '' so checkout uses its own default) rather than the historical tag: a backfill
+      # is only ever needed because something about the CI/build setup was broken at tag time
+      # (see BUG-004/BUG-005 in docs/backlog.md), and that's exactly what current main has
+      # fixed. The source itself doesn't meaningfully differ for a backfilled patch release.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.sha }}
+          ref: ${{ github.event_name == 'push' && github.sha || '' }}
 
       - name: Resolve tag and version
         id: release

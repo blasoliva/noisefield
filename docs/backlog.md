@@ -291,11 +291,22 @@ throwaway venv, no root needed), against the app running under `Xvfb`. Two throw
     changelog entry — see PR #19's history), bypassing release-please's own update path; that
     may have left its internal bookkeeping in a state where it still created the release but
     didn't surface `release_created=true` to the workflow.
+  - **Side effect:** since `publish` (specifically its `softprops/action-gh-release` step) never
+    ran, the release release-please created for v0.5.1 kept `prerelease: false` — the
+    `prerelease: startsWith(version, '0.')` flag is only ever applied by that step. A
+    `prerelease: false` 0.x release outranks every later, correctly-flagged 0.x prerelease for
+    GitHub's "Latest" badge, so v0.5.1 stayed "Latest" even after v0.5.2 shipped normally.
   - **Mitigation:** added a `workflow_dispatch` input (`tag`) to `release.yml` so `publish` can
     be run standalone against an existing tag, independent of release-please — see
-    [`docs/releasing.md`](releasing.md#if-the-buildpublish-step-gets-skipped). Still need to
-    run it for v0.5.1 to attach its artefacts (not done as of this writing), and the root cause
-    above is still unconfirmed.
+    [`docs/releasing.md`](releasing.md#if-the-buildpublish-step-gets-skipped). Re-running it for
+    v0.5.1 updates that same release in place (by tag name) and should fix both the missing
+    artefacts and the stale "Latest" flag in one shot, once the fix below lands.
+  - **The first version of that mitigation was itself broken:** it checked out the exact
+    historical `tag` to build from, so backfilling v0.5.1 hit `BUG-005` all over again (that tag
+    predates the clap-juce-extensions fix). Fixed by building from the triggering ref (current
+    `main`) on `workflow_dispatch` regardless of which tag is being backfilled — a backfill is
+    only ever needed because the build setup was broken *at tag time*, so it should always use
+    today's (working) infrastructure. The root cause of the original skip is still unconfirmed.
   - **Takeaway:** avoid hand-editing the `release-please--branches--main` branch directly in the
     future (e.g. to fix a changelog nit) now that it's a suspect — if a Release PR needs a
     correction, prefer letting release-please regenerate it (a trivial new commit on `main`) over
