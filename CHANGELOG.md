@@ -4,6 +4,14 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.5.3](https://github.com/blasoliva/noisefield/compare/v0.5.2...v0.5.3) (2026-10-02)
+
+
+### Bug Fixes
+
+* **ci:** backfill dispatch builds from main, not the historical tag ([ddfed4c](https://github.com/blasoliva/noisefield/commit/ddfed4c29db376ebac1a5cb5ac27005549f64ae1))
+* **ci:** backfill dispatch builds from main, not the historical tag ([fdc6e3d](https://github.com/blasoliva/noisefield/commit/fdc6e3d26fccfe7a2a21fd8610d0147c9db9e081))
+
 ## [0.5.2](https://github.com/blasoliva/noisefield/compare/v0.5.1...v0.5.2) (2026-10-02)
 
 
