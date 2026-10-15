@@ -4,6 +4,15 @@ All notable changes to Noisefield are documented here. This file is maintained a
 by [release-please](https://github.com/googleapis/release-please) from the Conventional Commit
 messages on `main`; see [`docs/releasing.md`](docs/releasing.md).
 
+## [0.5.4](https://github.com/blasoliva/noisefield/compare/v0.5.3...v0.5.4) (2026-10-05)
+
+
+### Documentation
+
+* BUG-004 recurred on v0.5.3, rule out the branch-edit theory ([edf8bfa](https://github.com/blasoliva/noisefield/commit/edf8bfa76a8249f6120e47f5c6d1471cf23a64e7))
+* BUG-004 recurred on v0.5.3, rule out the branch-edit theory ([9c56658](https://github.com/blasoliva/noisefield/commit/9c56658a5e2d025d6484ee6770d276a7330af968))
+* note a docs/releasing.md vs release-please behavior mismatch ([3c6a206](https://github.com/blasoliva/noisefield/commit/3c6a2066a19c70e296bd8e1dbbb923bd511a956f))
+
 ## [0.5.3](https://github.com/blasoliva/noisefield/compare/v0.5.2...v0.5.3) (2026-10-02)
 
 
